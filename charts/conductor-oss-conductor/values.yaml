@@ -1,0 +1,33 @@
+nameOverride: ""
+
+fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  repository: conductoross/conductor-standalone
+  tag: 3.15.0
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 300m
+    memory: 2Gi
+  limits:
+    cpu: 2
+    memory: 3Gi
+
+redis:
+  host: ""
+  port: "6379"
+  password: ""
+
+elasticsearch:
+  enabled: false
+  url: ""
+  indexName: ""
+  version: 7
+  clusterHealthColor: yellow
+
+prometheus:
+  enabled: false

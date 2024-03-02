@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "conductor-oss-conductor.fullname" . }}
+  labels:
+    {{- include "conductor-oss-conductor.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "conductor-oss-conductor.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations: { }
+      labels:
+        {{- include "conductor-oss-conductor.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: conductor
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: conductor.db.type
+              value: redis_standalone
+            - name: conductor.queue.type
+              value: redis_standalone
+            - name: conductor.redis.hosts
+              value: "{{ .Values.redis.host }}:{{ .Values.redis.port }}:us-east-1c:{{ .Values.redis.password }}"
+            - name: conductor.redis-lock.serverAddress
+              value: "redis://:{{ .Values.redis.password }}@{{ .Values.redis.host }}:{{ .Values.redis.port }}"
+            - name: conductor.redis.taskDefCacheRefreshInterval
+              value: "1"
+            - name: conductor.redis.workflowNamespacePrefix
+              value: conductor
+            - name: conductor.redis.queueNamespacePrefix
+              value: conductor_queues
+            - name: conductor.indexing.enabled
+              value: {{ .Values.elasticsearch.enabled | quote }}
+            - name: conductor.elasticsearch.url
+              value: {{ .Values.elasticsearch.url | quote }}
+            - name: conductor.elasticsearch.indexName
+              value: {{ .Values.elasticsearch.indexName | quote }}
+            - name: conductor.elasticsearch.version
+              value: {{ .Values.elasticsearch.version | quote }}
+            - name: conductor.elasticsearch.clusterHealthColor
+              value: {{ .Values.elasticsearch.clusterHealthColor | quote }}
+            - name: conductor.metrics-prometheus.enabled
+              value: {{ .Values.prometheus.enabled | quote }}
+            - name: management.endpoints.web.exposure.include
+              value: prometheus
+            - name: SPRING_PROFILES_ACTIVE
+              value: logrotate
+          ports:
+            - name: ui
+              containerPort: 5000
+              protocol: TCP
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 10
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
