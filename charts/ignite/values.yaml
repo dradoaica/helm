@@ -25,10 +25,10 @@ env:
   JVM_OPTS: "-Djava.net.preferIPv4Stack=true"
 peerClassLoadingEnabled: false
 
-## envFrom can be used to pass configmaps or secrets as environment
+## envFrom can be used to pass config-maps or secrets as environment
 # envFrom:
 #   - configMapRef:
-#       name: env-configmap
+#       name: env-config-maps
 #   - secretRef:
 #       name: env-secrets
 

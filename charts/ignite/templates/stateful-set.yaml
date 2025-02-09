@@ -25,7 +25,7 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: {{ include "ignite.fullname" . }}-configmap
+            name: {{ include "ignite.fullname" . }}-config-map
             items:
             - key: ignite-config.xml
               path: default-config.xml
