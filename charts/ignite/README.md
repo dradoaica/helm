@@ -6,10 +6,6 @@ Apache Ignite is an open-source memory-centric distributed database, caching,
 and processing platform for transactional, analytical, and streaming workloads
 delivering in-memory speeds at petabyte scale
 
-## DEPRECATION NOTICE
-
-This chart is deprecated and no longer supported.
-
 ## Install
 
 ```console
@@ -19,10 +15,10 @@ helm install --name my-release stable/ignite
 ## Configuration
 
 | Parameter                       | Description                                                                                                    | Default                                                                                                                           |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+|---------------------------------|----------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | `replicaCount`                  | Number of pods for ignite applications                                                                         | `2`                                                                                                                               |
 | `image.repository`              | Image repository                                                                                               | `apacheignite/ignite`                                                                                                             |
-| `image.tag`                     | Image tag                                                                                                      | `2.16.0`                                                                                                                           |
+| `image.tag`                     | Image tag                                                                                                      | `2.16.0`                                                                                                                          |
 | `image.pullPolicy`              | Image pull policy                                                                                              | `IfNotPresent`                                                                                                                    |
 | `nameOverride`                  | String to partially override ignite.fullname template with a string (will prepend the release name)            | `nil`                                                                                                                             |
 | `fullnameOverride`              | String to fully override ignite.fullname template with a string                                                | `nil`                                                                                                                             |
@@ -32,7 +28,7 @@ helm install --name my-release stable/ignite
 | `dataStorage.config`            | Additional config for `org.apache.ignite.configuration.DataStorageConfiguration` class                         | `nil`                                                                                                                             |
 | `env`                           | Dictionary (key/value) for additional environment for pod templates (if you need refs use envVars)             | `{ "OPTION_LIBS": "ignite-kubernetes,ignite-rest-http", "IGNITE_QUIET": "false", "JVM_OPTS": "-Djava.net.preferIPv4Stack=true" }` |
 | `envVars`                       | Array of Dictionaries (key/value) for additional environment for pod templates                                 | `nil`                                                                                                                             |
-| `envFrom`                       | Array of Dictionaries (key/value) for additional environment from secrets/config-maps for pod templates         | `nil`                                                                                                                             |
+| `envFrom`                       | Array of Dictionaries (key/value) for additional environment from secrets/config-maps for pod templates        | `nil`                                                                                                                             |
 | `extraInitContainers`           | additional Init Containers to run in the pods                                                                  | `[]`                                                                                                                              |
 | `extraContainers`               | additional containers to run in the pods                                                                       | `[]`                                                                                                                              |
 | `peerClassLoadingEnabled`       | (Boolean) Enable the ignite's [Zero Deployment](https://apacheignite.readme.io/docs/zero-deployment)           | `false`                                                                                                                           |
@@ -49,7 +45,7 @@ helm install --name my-release stable/ignite
 
 ## DataStorage
 
-Ignite can served as both database and caching service. By editing "memory and disk usage modes", 
+Ignite can served as both database and caching service. By editing "memory and disk usage modes",
 
 ## Persistence
 
@@ -65,4 +61,5 @@ helm install --name my-release \
 ```
 
 To configure persistence for other volume plugins you should edit
-`persistence.(persistenceVolume|walVolume).provisioner` and `persistence.(persistenceVolume|walVolume).provisionerParameters` variables.
+`persistence.(persistenceVolume|walVolume).provisioner` and
+`persistence.(persistenceVolume|walVolume).provisionerParameters` variables.

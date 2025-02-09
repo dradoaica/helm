@@ -16,5 +16,4 @@ home: https://ignite.apache.org/
 icon: https://ignite.apache.org/images/Ignite_tm_Logo_wht_RGB.svg
 sources:
 - https://github.com/apache/ignite
-deprecated: true
 engine: gotpl
