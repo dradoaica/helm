@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  # The cluster name.
+  name: {{ include "ignite.fullname" . }}-cluster
+  labels:
+    app.kubernetes.io/name: {{ include "ignite.name" . }}
+    helm.sh/chart: {{ include "ignite.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  # The initial number of pods to be started by Kubernetes.
+  replicas: {{ .Values.replicaCount }}
+  # Kubernetes service to access the Ignite 3 cluster on the Kubernetes network.
+  serviceName: {{ include "ignite.fullname" . }}-svc-headless
+  selector:
+    matchLabels:
+      app: {{ include "ignite.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "ignite.fullname" . }}
+    spec:
+      terminationGracePeriodSeconds: 60000
+      containers:
+        # Custom pod name.
+        - name: ignite-node
+          # Limits and requests for the Ignite container.
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          env:
+            # Must be specified to ensure that Ignite 3 cluster replicas are visible to each other.
+            - name: IGNITE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            # Ignite 3 working directory.
+            - name: IGNITE_WORK_DIR
+              value: /ai3-work
+{{- range $name, $value := .Values.env }}
+            - name: "{{ $name }}"
+              value: "{{ $value }}"
+{{- end }}
+          # Ignite 3 Docker image and it's version.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          ports:
+            - containerPort: 10300 # Management port number.
+            - containerPort: 10800 # REST port number.
+            - containerPort: 3344 # Cluster port number.
+          volumeMounts:
+            # The config will be placed at this path in the container.
+            - mountPath: /opt/ignite/etc/ignite-config.conf
+              name: config-vol
+              subPath: ignite-config.conf
+            # Ignite 3 working directory.
+            - mountPath: /ai3-work
+              name: persistence
+      volumes:
+        - name: config-vol
+          configMap:
+            name: {{ include "ignite.fullname" . }}-config-map
+  volumeClaimTemplates:
+    - metadata:
+        name: persistence
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "{{ include "ignite.fullname" . }}-persistence-storage-class"
+        resources:
+          requests:
+            storage: {{ .Values.persistence.persistenceVolume.size }}

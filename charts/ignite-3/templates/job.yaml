@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ignite.fullname" . }}-cluster-init
+spec:
+  template:
+    spec:
+      containers:
+        # Command to init the cluster. URL and host must be the name of the service you created before. Port is 10300 as the management port.
+        - args:
+            - -ec
+            - |
+              apt update && apt-get install -y bind9-host
+              AI3_NODES=$(host -tsrv _cluster._tcp.{{ include "ignite.fullname" . }}-svc-headless | grep 'SRV record' | awk '{print $8}' | awk -F. '{print $1}' | paste -sd ',')
+              /opt/ignite3cli/bin/ignite3 cluster init --name={{ include "ignite.fullname" . }} --metastorage-group $AI3_NODES --url=http://{{ include "ignite.fullname" . }}-svc-headless:10300
+          command:
+            - /bin/sh
+          # Specify the Docker image with the Ignite 3 CLI and its version.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          name: cluster-init
+          resources: { }
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 120

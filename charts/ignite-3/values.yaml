@@ -1,0 +1,29 @@
+# Default values for ignite.
+replicaCount: 2
+
+image:
+  repository: apacheignite/ignite
+  tag: 3.0.0
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+env:
+  IGNITE3_EXTRA_JVM_ARGS: ""
+
+resources:
+  limits:
+    cpu: "4"
+    memory: 4Gi
+  requests:
+    cpu: "4"
+    memory: 4Gi
+
+persistence:
+  persistenceVolume:
+    size: 10Gi
+    provisioner: kubernetes.io/aws-ebs
+    provisionerParameters:
+      type: gp2
+      fsType: ext4
