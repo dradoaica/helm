@@ -4,11 +4,17 @@
 multipass launch --name microk8s-vm --cpus 4 --memory 8G --disk 40G
 multipass shell microk8s-vm
 sudo snap install microk8s --classic --channel=1.29/stable
+sudo snap install microk8s-integrator-windows
 sudo iptables -P FORWARD ACCEPT
-multipass info microk8s-vm
-microk8s start
-microk8s status --wait-ready
 microk8s config > $env:LOCALAPPDATA\MicroK8s\config
+microk8s status --wait-ready
+```
+
+## or
+
+```
+microk8s install --cpu=4 --mem=8 --disk=40 --channel=1.29/stable
+microk8s status --wait-ready
 ```
 
 # Turn on the services you want
@@ -61,10 +67,14 @@ multipass exec microk8s-vm -- rm -rf helms/ignite-3
 
 ```
 microk8s stop
-multipass stop microk8s-vm
 multipass delete microk8s-vm
 multipass purge
-multipass list
+```
+
+## or
+
+```
+microk8s uninstall
 ```
 
 # Misc
