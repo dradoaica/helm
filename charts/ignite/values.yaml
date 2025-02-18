@@ -19,8 +19,11 @@ serviceAccount:
 dataStorage:
   config: |-
 
+metrics:
+  enabled: false
+
 env:
-  OPTION_LIBS: "ignite-kubernetes,ignite-rest-http"
+  OPTION_LIBS: "ignite-kubernetes,ignite-rest-http,ignite-json,ignite-opencensus"
   IGNITE_QUIET: "false"
   JVM_OPTS: "-Djava.net.preferIPv4Stack=true"
 peerClassLoadingEnabled: false

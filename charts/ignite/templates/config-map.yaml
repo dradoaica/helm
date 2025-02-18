@@ -84,5 +84,17 @@ data:
                     </property>
                 </bean>
             </property>
+
+{{- if (.Values.metrics.enabled) }}
+            <property name="metricsUpdateFrequency" value="5000"/>
+
+            <property name="metricExporterSpi">
+                <list>
+                    <bean class="org.apache.ignite.spi.metric.opencensus.OpenCensusMetricExporterSpi">
+                        <property name="period" value="10000" />
+                    </bean>
+                </list>
+            </property>
+{{- end }}
         </bean>
     </beans>
