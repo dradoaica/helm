@@ -3,7 +3,7 @@ replicaCount: 2
 
 image:
   repository: apacheignite/ignite
-  tag: 2.16.0
+  tag: 2.17.0
   pullPolicy: IfNotPresent
 
 nameOverride: ""
