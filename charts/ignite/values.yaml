@@ -25,7 +25,9 @@ metrics:
 env:
   OPTION_LIBS: "ignite-kubernetes,ignite-rest-http,ignite-json,ignite-opencensus"
   IGNITE_QUIET: "false"
-  JVM_OPTS: "-Djava.net.preferIPv4Stack=true"
+  IGNITE_WAL_MMAP: "false"
+  IGNITE_WAIT_FOR_BACKUPS_ON_SHUTDOWN: "true"
+  JVM_OPTS: "-Djava.net.preferIPv4Stack=true -Xms1g -Xmx1g -server -XX:MaxMetaspaceSize=256m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC"
 peerClassLoadingEnabled: false
 
 ## envFrom can be used to pass config-maps or secrets as environment
