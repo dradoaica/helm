@@ -16,8 +16,26 @@ serviceAccount:
   create: true
   name:
 
+peerClassLoadingEnabled: false
+
+persistence:
+  enabled: false
+  persistenceVolume:
+    size: 8Gi
+    storageClassName: microk8s-hostpath
+  walVolume:
+    size: 8Gi
+    storageClassName: microk8s-hostpath
+
 dataStorage:
   config: |-
+
+ssl:
+  enabled: false
+  keyStoreFilePath: ""
+  keyStorePassword: ""
+  trustStoreFilePath: ""
+  trustStorePassword: ""
 
 metrics:
   enabled: false
@@ -28,7 +46,6 @@ env:
   IGNITE_WAL_MMAP: "false"
   IGNITE_WAIT_FOR_BACKUPS_ON_SHUTDOWN: "true"
   JVM_OPTS: "-Djava.net.preferIPv4Stack=true -Xms1g -Xmx1g -server -XX:MaxMetaspaceSize=256m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC"
-peerClassLoadingEnabled: false
 
 ## envFrom can be used to pass config-maps or secrets as environment
 # envFrom:
@@ -50,15 +67,6 @@ extraContainers: []
 #  - name: jmxexporter
 #    image: sscaling/jmx-prometheus-exporter
 #    command: ["sh", "-c", "chown -R 1000:1000 logs"]
-
-persistence:
-  enabled: false
-  persistenceVolume:
-    size: 8Gi
-    storageClassName: microk8s-hostpath
-  walVolume:
-    size: 8Gi
-    storageClassName: microk8s-hostpath
 
 ## extraVolumes and extraVolumeMounts allows you to mount other volumes
 ## Example Use Cases:

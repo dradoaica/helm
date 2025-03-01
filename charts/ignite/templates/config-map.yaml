@@ -70,6 +70,24 @@ data:
                 </bean>
             </property>
 
+{{- if (.Values.ssl.enabled) }}
+            <property name="clientConnectorConfiguration">
+                <bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
+                    <property name="sslEnabled" value="true"/>
+                    <property name="useIgniteSslContextFactory" value="false"/>
+                    <property name="sslClientAuth" value="true"/>
+                    <property name="sslContextFactory">
+                        <bean class="org.apache.ignite.ssl.SslContextFactory">
+                            <property name="keyStoreFilePath" value="{{ .Values.ssl.keyStoreFilePath }}"/>
+                            <property name="keyStorePassword" value="{{ .Values.ssl.keyStorePassword }}"/>
+                            <property name="trustStoreFilePath" value="{{ .Values.ssl.trustStoreFilePath }}"/>
+                            <property name="trustStorePassword" value="{{ .Values.ssl.trustStorePassword }}"/>
+                        </bean>
+                    </property>
+                </bean>
+            </property>
+{{- end }}
+
             <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
             <property name="discoverySpi">
                 <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
