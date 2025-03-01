@@ -65,7 +65,7 @@ spec:
         name: persistence
       spec:
         accessModes: [ "ReadWriteOnce" ]
-        storageClassName: "{{ include "ignite.fullname" . }}-persistence-storage-class"
+        storageClassName: {{ .Values.persistence.persistenceVolume.storageClassName }}
         resources:
           requests:
             storage: {{ .Values.persistence.persistenceVolume.size }}

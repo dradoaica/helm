@@ -23,7 +23,4 @@ resources:
 persistence:
   persistenceVolume:
     size: 10Gi
-    provisioner: kubernetes.io/aws-ebs
-    provisionerParameters:
-      type: gp2
-      fsType: ext4
+    storageClassName: microk8s-hostpath
