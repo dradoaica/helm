@@ -14,7 +14,7 @@ rbac:
 
 serviceAccount:
   create: true
-  name:
+  name: ""
 
 peerClassLoadingEnabled: false
 
