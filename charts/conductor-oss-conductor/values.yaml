@@ -1,13 +1,12 @@
-nameOverride: ""
-
-fullnameOverride: ""
-
 replicaCount: 1
 
 image:
   repository: conductoross/conductor-standalone
   tag: 3.15.0
   pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
 
 resources:
   requests:
