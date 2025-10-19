@@ -36,7 +36,7 @@ spec:
                   fieldPath: metadata.name
             # Ignite 3 working directory.
             - name: IGNITE_WORK_DIR
-              value: /ai3-work
+              value: /ignite-3-work
 {{- range $name, $value := .Values.env }}
             - name: "{{ $name }}"
               value: "{{ $value }}"
@@ -54,7 +54,7 @@ spec:
               name: config-vol
               subPath: ignite-config.conf
             # Ignite 3 working directory.
-            - mountPath: /ai3-work
+            - mountPath: /ignite-3-work
               name: persistence
       volumes:
         - name: config-vol

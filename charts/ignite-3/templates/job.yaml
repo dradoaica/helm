@@ -11,8 +11,8 @@ spec:
             - -ec
             - |
               apt update && apt-get install -y bind9-host
-              AI3_NODES=$(host -tsrv _cluster._tcp.{{ include "ignite.fullname" . }}-svc-headless | grep 'SRV record' | awk '{print $8}' | awk -F. '{print $1}' | paste -sd ',')
-              /opt/ignite3cli/bin/ignite3 cluster init --name={{ include "ignite.fullname" . }} --metastorage-group $AI3_NODES --url=http://{{ include "ignite.fullname" . }}-svc-headless:10300
+              IGNITE-3_NODES=$(host -tsrv _cluster._tcp.{{ include "ignite.fullname" . }}-svc-headless | grep 'SRV record' | awk '{print $8}' | awk -F. '{print $1}' | paste -sd ',')
+              /opt/ignite3cli/bin/ignite3 cluster init --name={{ include "ignite.fullname" . }} --metastorage-group $IGNITE-3_NODES --url=http://{{ include "ignite.fullname" . }}-svc-headless:10300
           command:
             - /bin/sh
           # Specify the Docker image with the Ignite 3 CLI and its version.
