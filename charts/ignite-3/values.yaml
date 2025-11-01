@@ -10,6 +10,8 @@ nameOverride: ""
 fullnameOverride: ""
 
 env:
+  JVM_MAX_MEM: "4g"
+  JVM_MIN_MEM: "4g"
   IGNITE3_EXTRA_JVM_ARGS: ""
 
 resources:

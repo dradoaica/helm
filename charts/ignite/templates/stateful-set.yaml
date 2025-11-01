@@ -70,7 +70,7 @@ spec:
         - containerPort: 49112 # JMX port number.
         - containerPort: 10800 # SQL port number.
         - containerPort: 8080 # REST port number.
-        - containerPort: 10900 #Thin clients port number.
+        - containerPort: 10900 # Thin clients port number.
         volumeMounts:
 {{- if (.Values.persistence.enabled) }}
         - mountPath: "/wal"
