@@ -1,0 +1,120 @@
+{{- if and .Values.persistence.enabled .Values.initializationJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ignite.fullname" . }}-cluster-init
+  labels:
+    {{- include "ignite.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "ignite.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cluster-init
+    spec:
+      serviceAccountName: {{ include "ignite.serviceAccountName" . }}
+      containers:
+        - name: cluster-init
+          # Specify the Docker image with the Ignite 3 CLI and its version.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          command:
+            - /bin/sh
+          # Command to init the cluster. URL and host must be the name of the service you created before. Port is the management port from values.
+          args:
+            - -ec
+            - |
+              apt update && apt-get install -y curl
+              export JDK_JAVA_OPTIONS="--add-opens=java.base/java.lang=ALL-UNNAMED \
+              --add-opens=java.base/java.lang.invoke=ALL-UNNAMED \
+              --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
+              --add-opens=java.base/java.io=ALL-UNNAMED \
+              --add-opens=java.base/java.nio=ALL-UNNAMED \
+              --add-opens=java.base/java.math=ALL-UNNAMED \
+              --add-opens=java.base/java.util=ALL-UNNAMED \
+              --add-opens=java.base/java.time=ALL-UNNAMED \
+              --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED \
+              --add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
+              --add-opens=java.base/sun.security.x509=ALL-UNNAMED"
+
+              REPLICA_COUNT={{ .Values.replicaCount }}
+              for i in $(seq 0 $((REPLICA_COUNT - 1))); do
+                POD_HOST="{{ include "ignite.fullname" . }}-cluster-$i.{{ include "ignite.fullname" . }}-svc-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.management }}"
+                echo "[INFO] Waiting for Ignite pod $i ($POD_HOST) to be ready..."
+                until curl -s --fail "http://$POD_HOST/management/v1/node/state" > /dev/null; do
+                  echo "[WARNING] Ignite pod $i ($POD_HOST) is not ready. Retrying in 5s..."
+                  sleep 5
+                done
+              done
+
+              MAX_RETRIES=30
+              CLUSTER_URL="http://{{ include "ignite.fullname" . }}-svc-headless:{{ .Values.service.ports.management }}"
+              echo "[INFO] Waiting for last Ignite pod to be ready in the cluster topology..."
+              for i in $(seq 1 $MAX_RETRIES); do
+                if /opt/ignite3cli/bin/ignite3 cluster topology physical --url=$CLUSTER_URL 2>/dev/null | grep -q "{{ include "ignite.fullname" . }}-cluster-$((REPLICA_COUNT-1))"; then
+                  echo "[INFO] All Ignite pods are ready in the cluster topology"
+                  break
+                fi
+                echo "[WARNING] Waiting for last Ignite pod to be ready in the cluster topology ($i/$MAX_RETRIES)..."
+
+                if [ $i -lt $MAX_RETRIES ]; then
+                  sleep 5
+                else
+                  echo "[ERROR] Not all Ignite pods appeared in the cluster topology within $MAX_RETRIES retries"
+                  exit 1
+                fi
+              done
+
+              # Calculate CMG and metastorage group sizes according to Ignite recommendations
+              if [ $REPLICA_COUNT -le 3 ]; then
+                # For clusters ≤3 nodes: all nodes are used for both CMG and metastorage
+                CMG_SIZE=$REPLICA_COUNT
+              elif [ $REPLICA_COUNT -eq 4 ]; then
+                # For clusters =4 nodes: three nodes are used (to maintain odd number)
+                CMG_SIZE=3
+              else
+                # For clusters ≥5 nodes: five nodes are used (to balance fault tolerance and overhead)
+                CMG_SIZE=5
+              fi
+
+              # Build CMG node list (first N nodes)
+              CMG_NODES=""
+              for i in $(seq 0 $((CMG_SIZE-1))); do
+                if [ -n "$CMG_NODES" ]; then
+                  CMG_NODES="$CMG_NODES,{{ include "ignite.fullname" . }}-cluster-$i"
+                else
+                  CMG_NODES="{{ include "ignite.fullname" . }}-cluster-$i"
+                fi
+              done
+
+              # Log the approach being used
+              echo "[INFO] Using StatefulSet naming pattern for cluster initialization. Initializing the Ignite cluster..."
+              echo "[INFO] Replica count: $REPLICA_COUNT"
+              echo "[INFO] CMG size: $CMG_SIZE"
+              echo "[INFO] CMG nodes: $CMG_NODES"
+              /opt/ignite3cli/bin/ignite3 cluster init --name={{ include "ignite.fullname" . }} --metastorage-group $CMG_NODES --url=$CLUSTER_URL
+
+              echo "[INFO] Waiting for the Ignite cluster to become active..."
+              FIRST_POD_HOST="{{ include "ignite.fullname" . }}-cluster-0.{{ include "ignite.fullname" . }}-svc-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.management }}"
+              for i in $(seq 1 $MAX_RETRIES); do
+                STATE_RESPONSE=$(curl -s --fail "http://$FIRST_POD_HOST/management/v1/cluster/state" 2>&1)
+                HTTP_OK=$?
+                echo "[INFO] State response ($i/$MAX_RETRIES): $STATE_RESPONSE"
+                if [ $HTTP_OK -eq 0 ]; then
+                  echo "[INFO] The Ignite cluster is now ACTIVE!"
+                  exit 0
+                fi
+
+                if [ $i -lt $MAX_RETRIES ]; then
+                  echo "[WARNING] The Ignite cluster is not yet active. Retrying in 5s..."
+                  sleep 5
+                fi
+              done
+
+              echo "[ERROR] The Ignite cluster did not become active within $MAX_RETRIES retries"
+              exit 1
+          resources:
+            {{- toYaml .Values.initializationJob.resources | nindent 12 }}
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 120
+{{- end }}

@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # The name must be equal to netClusterNodes.
+  name: {{ include "ignite.fullname" . }}-svc-headless
+  labels:
+    {{- include "ignite.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: management
+      port: {{ .Values.service.ports.management }}
+      protocol: TCP
+      targetPort: 10300
+    - name: rest
+      port: {{ .Values.service.ports.rest }}
+      protocol: TCP
+      targetPort: 10800
+    - name: cluster
+      port: {{ .Values.service.ports.cluster }}
+      protocol: TCP
+      targetPort: 3344
+  selector:
+  # Must be equal to the label set for pods.
+    {{- include "ignite.selectorLabels" . | nindent 4 }}
+  # Include not-yet-ready nodes.
+  publishNotReadyAddresses: True
+  sessionAffinity: None
+

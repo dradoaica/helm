@@ -1,0 +1,10 @@
+apiVersion: v2
+name: conductor-oss-conductor
+description: Chart for deploying a Conductor OSS Conductor on Kubernetes as Deployment
+version: 3.15.0
+appVersion: "3.15.0"
+keywords:
+  - conductor
+maintainers:
+  - name: dradoaica
+kubeVersion: ">= 1.26.0"

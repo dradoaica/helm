@@ -1,0 +1,196 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ignite.fullname" . }}-config-map
+  labels:
+    {{- include "ignite.labels" . | nindent 4 }}
+data:
+  ignite-config.conf: |
+    ignite {
+        clientConnector {
+            connectTimeoutMillis=5000
+            idleTimeoutMillis=0
+            listenAddresses=[]
+            metricsEnabled=true
+            port=10800
+            sendServerExceptionStackTraceToClient=false
+            ssl {
+                ciphers=""
+                clientAuth=none
+                enabled=false
+                keyStore {
+                    password=""
+                    path=""
+                    type=PKCS12
+                }
+                trustStore {
+                    password=""
+                    path=""
+                    type=PKCS12
+                }
+            }
+        }
+        compute {
+            queueMaxSize=2147483647
+            statesLifetimeMillis=60000
+            threadPoolSize=10
+        }
+        deployment {
+            location=deployment
+        }
+        failureHandler {
+            dumpThreadsOnFailure=true
+            dumpThreadsThrottlingTimeoutMillis=10000
+            handler {
+                ignoredFailureTypes=[
+                    systemWorkerBlocked,
+                    systemCriticalOperationTimeout
+                ]
+                type=noop
+            }
+            oomBufferSizeBytes=16384
+        }
+        network {
+            fileTransfer {
+                chunkSizeBytes=1048576
+                maxConcurrentRequests=4
+                responseTimeoutMillis=10000
+                threadPoolSize=8
+            }
+            inbound {
+                soBacklog=128
+                soKeepAlive=true
+                soLinger=0
+                soReuseAddr=true
+                tcpNoDelay=true
+            }
+            listenAddresses=[]
+            membership {
+                failurePingIntervalMillis=1000
+                membershipSyncIntervalMillis=30000
+                scaleCube {
+                    failurePingRequestMembers=3
+                    gossipIntervalMillis=200
+                    gossipRepeatMult=3
+                    membershipSuspicionMultiplier=5
+                    metadataTimeoutMillis=3000
+                }
+            }
+            nodeFinder {
+                netClusterNodes=[
+                  # Kubernetes service to access the Ignite 3 cluster on the Kubernetes network
+                  "{{ include "ignite.fullname" . }}-svc-headless:{{ .Values.service.ports.cluster }}"
+                ]
+                type=STATIC
+            }
+            outbound {
+                soKeepAlive=true
+                soLinger=0
+                tcpNoDelay=true
+            }
+            port={{ .Values.service.ports.cluster }}
+            shutdownQuietPeriodMillis=0
+            shutdownTimeoutMillis=15000
+            ssl {
+                ciphers=""
+                clientAuth=none
+                enabled=false
+                keyStore {
+                    password=""
+                    path=""
+                    type=PKCS12
+                }
+                trustStore {
+                    password=""
+                    path=""
+                    type=PKCS12
+                }
+            }
+        }
+        raft {
+            fsync=false
+            installSnapshotTimeoutMillis=2147483647
+            logStripesCount=4
+            logYieldStrategy=false
+            responseTimeoutMillis=3000
+            retryDelayMillis=200
+            retryTimeoutMillis=10000
+            stripes=10
+            volatileRaft {
+                logStorageBudget {
+                    name=unlimited
+                }
+            }
+        }
+        rest {
+            dualProtocol=false
+            httpToHttpsRedirection=false
+            port=10300
+            ssl {
+                ciphers=""
+                clientAuth=none
+                enabled=false
+                keyStore {
+                    password=""
+                    path=""
+                    type=PKCS12
+                }
+                port=10400
+                trustStore {
+                    password=""
+                    path=""
+                    type=PKCS12
+                }
+            }
+        }
+        sql {
+            execution {
+                threadCount=4
+            }
+            planner {
+                threadCount=4
+            }
+        }
+        storage {
+            engines {
+                aimem {
+                    pageSizeBytes=16384
+                }
+                aipersist {
+                    checkpoint {
+                        checkpointDelayMillis=200
+                        checkpointThreads=4
+                        compactionThreads=4
+                        intervalDeviationPercent=40
+                        intervalMillis=180000
+                        logReadLockThresholdTimeoutMillis=0
+                        readLockTimeoutMillis=10000
+                        useAsyncFileIoFactory=true
+                    }
+                    pageSizeBytes=16384
+                }
+                rocksdb {
+                    flushDelayMillis=100
+                }
+            }
+            profiles=[
+                {
+                    engine=aipersist
+                    name=default
+                    replacementMode=CLOCK
+                    sizeBytes=6672915660
+                }
+            ]
+        }
+        system {
+            cmgPath=""
+            criticalWorkers {
+                livenessCheckIntervalMillis=200
+                maxAllowedLagMillis=500
+                nettyThreadsHeartbeatIntervalMillis=100
+            }
+            metastoragePath=""
+            partitionsBasePath=""
+            partitionsLogPath=""
+        }
+    }

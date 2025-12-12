@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "ignite.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "ignite.name" . }}
+    helm.sh/chart: {{ include "ignite.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "ignite.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "ignite.fullname" . }}-svc-headless
+  replicas: {{ .Values.replicaCount }}
+  {{- if .Values.podManagementPolicy }}
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
+  {{- end }}
+  {{- if .Values.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- end }}
+  {{- if .Values.updateStrategy }}
+  updateStrategy:
+    type: {{ .Values.updateStrategy.type }}
+    {{- if .Values.updateStrategy.rollingUpdate }}
+    rollingUpdate: {{- toYaml .Values.updateStrategy.rollingUpdate | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "ignite.podLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/config-map.yaml") . | sha256sum }}
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ include "ignite.serviceAccountName" . }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
+      {{- end }}
+{{- if .Values.priorityClassName }}
+      priorityClassName: "{{ .Values.priorityClassName }}"
+{{- end }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "ignite.fullname" . }}-config-map
+            items:
+              - key: ignite-config.xml
+                path: default-config.xml
+{{- with .Values.extraVolumes }}
+{{- toYaml . | nindent 8 }}
+{{- end }}
+{{- if .Values.extraInitContainers }}
+      initContainers:
+{{- toYaml .Values.extraInitContainers | nindent 8 }}
+{{- end }}
+      containers:
+{{- if .Values.extraContainers }}
+{{- toYaml .Values.extraContainers | nindent 8 }}
+{{- end }}
+        - name: ignite
+          image: {{ include "ignite.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+          {{- toYaml (omit .Values.containerSecurityContext "enabled") | nindent 12 }}
+        {{- end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          env:
+{{- if .Values.env }}
+{{- range $name, $value := .Values.env }}
+            - name: "{{ $name }}"
+              value: "{{ $value }}"
+{{- end }}
+{{- end }}
+{{- if .Values.extraEnvVars }}
+{{- toYaml .Values.extraEnvVars | nindent 12 }}
+{{- end }}
+{{- if or .Values.envFrom .Values.extraEnvVarsCM .Values.extraEnvVarsSecret }}
+          envFrom:
+{{- if .Values.envFrom }}
+{{ toYaml .Values.envFrom | indent 12 }}
+{{- end }}
+{{- if .Values.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ .Values.extraEnvVarsCM }}
+{{- end }}
+{{- if .Values.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ .Values.extraEnvVarsSecret }}
+{{- end }}
+{{- end }}
+          ports:
+            - containerPort: 11211
+            - containerPort: 47100
+            - containerPort: 47500
+            - containerPort: 49112
+            - containerPort: 10800
+            - containerPort: 8080
+            - containerPort: 10900
+        {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
+        {{- end }}
+        {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
+        {{- end }}
+        {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
+        {{- end }}
+          volumeMounts:
+{{- if (.Values.persistence.enabled) }}
+            - mountPath: "/wal"
+              name: ignite-wal
+            - mountPath: "/persistence"
+              name: ignite-persistence
+{{- end }}
+            - name: config-volume
+              mountPath: /opt/ignite/apache-ignite/config
+{{- with .Values.extraVolumeMounts }}
+{{- toYaml . | nindent 12 }}
+{{- end }}
+{{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+  volumeClaimTemplates:
+{{- if (.Values.persistence.enabled) }}
+    - metadata:
+        name: ignite-persistence
+      spec:
+        accessModes:
+        {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+    - metadata:
+        name: ignite-wal
+      spec:
+        accessModes:
+        {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        storageClassName: {{ .Values.persistence.walVolume.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.walVolume.size }}
+{{- end }}

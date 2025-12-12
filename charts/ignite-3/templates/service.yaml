@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ignite.fullname" . }}
+  labels:
+    {{- include "ignite.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: management
+      port: {{ .Values.service.ports.management }}
+      protocol: TCP
+      targetPort: 10300
+    - name: rest
+      port: {{ .Values.service.ports.rest }}
+      protocol: TCP
+      targetPort: 10800
+    - name: cluster
+      port: {{ .Values.service.ports.cluster }}
+      protocol: TCP
+      targetPort: 3344
+  selector:
+    {{- include "ignite.selectorLabels" . | nindent 4 }}
+  sessionAffinity: None

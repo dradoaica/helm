@@ -1,0 +1,63 @@
+{{- if and .Values.persistence.enabled .Values.activationJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ignite.fullname" . }}-cluster-activate
+  labels:
+    {{- include "ignite.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "ignite.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cluster-activate
+    spec:
+      serviceAccountName: {{ include "ignite.serviceAccountName" . }}
+      containers:
+        - name: cluster-activate
+          image: "{{ .Values.activationJob.image.registry }}/{{ .Values.activationJob.image.repository }}:{{ .Values.activationJob.image.tag }}"
+          imagePullPolicy: {{ .Values.activationJob.image.pullPolicy }}
+          command:
+            - /bin/sh
+          args:
+            - -ec
+            - |
+              REPLICA_COUNT={{ .Values.replicaCount }}
+              for i in $(seq 0 $((REPLICA_COUNT - 1))); do
+                POD_HOST="{{ include "ignite.fullname" . }}-$i.{{ include "ignite.fullname" . }}-svc-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.http }}"
+                echo "[INFO] Waiting for Ignite pod $i ($POD_HOST) to be ready..."
+                until curl -s --fail "http://$POD_HOST/ignite?cmd=probe" > /dev/null; do
+                  echo "[WARNING] Ignite pod $i ($POD_HOST) is not ready. Retrying in 5s..."
+                  sleep 5
+                done
+              done
+
+              echo "[INFO] Activating the Ignite cluster..."
+              FIRST_POD_HOST="{{ include "ignite.fullname" . }}-0.{{ include "ignite.fullname" . }}-svc-headless.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.http }}"
+              ACTIVATION_RES=$(curl -s "http://$FIRST_POD_HOST/ignite?cmd=setstate&state=ACTIVE")
+              echo "[INFO] Activation response: $ACTIVATION_RES"
+
+              echo "[INFO] Waiting for the Ignite cluster to become active..."
+              MAX_RETRIES=30
+              for i in $(seq 1 $MAX_RETRIES); do
+                STATE_RESPONSE=$(curl -s --fail "http://$FIRST_POD_HOST/ignite?cmd=state" 2>&1)
+                HTTP_OK=$?
+                echo "[INFO] State response ($i/$MAX_RETRIES): $STATE_RESPONSE"
+                if [ $HTTP_OK -eq 0 ] && echo "$STATE_RESPONSE" | grep -q '"response".*"ACTIVE'; then
+                  echo "[INFO] The Ignite cluster is now ACTIVE!"
+                  exit 0
+                fi
+
+                if [ $i -lt $MAX_RETRIES ]; then
+                  echo "[WARNING] The Ignite cluster is not yet active. Retrying in 5s..."
+                  sleep 5
+                fi
+              done
+
+              echo "[ERROR] The Ignite cluster did not become active within $MAX_RETRIES retries"
+              exit 1
+          resources:
+            {{- toYaml .Values.activationJob.resources | nindent 12 }}
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 120
+{{- end }}

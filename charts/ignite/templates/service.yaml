@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ignite.fullname" . }}
+  labels:
+    {{- include "ignite.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: jdbc
+      port: {{ .Values.service.ports.jdbc }}
+      targetPort: 11211
+    - name: spi-communication
+      port: {{ .Values.service.ports.spi }}
+      targetPort: 47100
+    - name: spi-discovery
+      port: {{ .Values.service.ports.discovery }}
+      targetPort: 47500
+    - name: jmx
+      port: {{ .Values.service.ports.jmx }}
+      targetPort: 49112
+    - name: sql
+      port: {{ .Values.service.ports.sql }}
+      targetPort: 10800
+    - name: rest
+      port: {{ .Values.service.ports.http }}
+      targetPort: 8080
+    - name: thin-clients
+      port: {{ .Values.service.ports.thin }}
+      targetPort: 10900
+  selector:
+    {{- include "ignite.selectorLabels" . | nindent 4 }}

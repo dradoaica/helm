@@ -1,0 +1,28 @@
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+
+** Please be patient while the chart is being deployed **
+
+{{- if (.Values.persistence.enabled) }}
+
+{{- if (.Values.activationJob.enabled) }}
+If persistence is enabled, the cluster will be activated automatically by a Job.
+  You can check the activation status:
+  
+    kubectl get job -n {{ .Release.Namespace }} -l app={{ include "ignite.fullname" . }}-activate
+{{- else }}
+If persistence is enabled, you need to activate your ignite cluster. To do it please ensure all
+stateful set pods are in "Running" state :
+
+  kubectl get pods -n {{ .Release.Namespace }} -l app={{ include "ignite.fullname" . }}
+
+and then execute:
+
+  kubectl exec -n {{ .Release.Namespace }} {{ include "ignite.fullname" . }}-0 -- /opt/ignite/apache-ignite/bin/control.sh --activate
+{{- end }}
+
+{{- end }}
+To check cluster state please run:
+
+  kubectl exec -n {{ .Release.Namespace }} {{ include "ignite.fullname" . }}-0 -- /opt/ignite/apache-ignite/bin/control.sh --state

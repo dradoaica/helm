@@ -1,0 +1,122 @@
+global:
+  imageRegistry: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+commonAnnotations: { }
+labels: { }
+podLabels: { }
+podAnnotations: { }
+customLabels: { }
+
+extraInitContainers: [ ]
+extraContainers: [ ]
+extraVolumes: [ ]
+extraVolumeMounts: [ ]
+extraEnvVars: [ ]
+extraEnvVarsCM: ""
+extraEnvVarsSecret: ""
+envFrom: [ ]
+
+image:
+  registry: docker.io
+  repository: conductoross/conductor-standalone
+  tag: 3.15.0
+  pullPolicy: IfNotPresent
+  pullSecrets: [ ]
+  debug: false
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: { }
+
+revisionHistoryLimit: 10
+updateStrategy:
+  type: RollingUpdate
+
+priorityClassName: ""
+
+terminationGracePeriodSeconds: 60
+
+podSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+
+resources:
+  requests:
+    cpu: 300m
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 3Gi
+
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+
+startupProbe:
+  enabled: false
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 15
+  successThreshold: 1
+
+service:
+  type: ClusterIP
+  port: 8080
+  nodePort: ""
+
+nodeSelector: { }
+tolerations: [ ]
+affinity: { }
+topologySpreadConstraints: [ ]
+
+# App specific
+replicaCount: 1
+
+redis:
+  host: ""
+  port: "6379"
+  password: ""
+
+elasticsearch:
+  enabled: false
+  url: ""
+  indexName: ""
+  version: 7
+  clusterHealthColor: yellow
+
+prometheus:
+  enabled: false

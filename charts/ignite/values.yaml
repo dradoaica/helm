@@ -1,0 +1,166 @@
+global:
+  imageRegistry: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+commonAnnotations: { }
+labels: { }
+podLabels: { }
+podAnnotations: { }
+customLabels: { }
+
+extraInitContainers: [ ]
+extraContainers: [ ]
+extraVolumes: [ ]
+extraVolumeMounts: [ ]
+extraEnvVars: [ ]
+extraEnvVarsCM: ""
+extraEnvVarsSecret: ""
+envFrom: [ ]
+
+image:
+  registry: docker.io
+  repository: apacheignite/ignite
+  tag: 2.17.0
+  pullPolicy: IfNotPresent
+  pullSecrets: [ ]
+  debug: false
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: { }
+
+rbac:
+  create: true
+
+podManagementPolicy: OrderedReady
+revisionHistoryLimit: 10
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    partition: 0
+
+priorityClassName: ""
+
+terminationGracePeriodSeconds: 60
+
+podSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+
+resources:
+  requests:
+    cpu: "2"
+    memory: 4Gi
+  limits:
+    cpu: "2"
+    memory: 4Gi
+
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /ignite?cmd=version
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /ignite?cmd=probe
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+
+startupProbe:
+  enabled: false
+  httpGet:
+    path: /ignite?cmd=version
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 15
+  successThreshold: 1
+
+service:
+  ports:
+    jdbc: 11211
+    spi: 47100
+    discovery: 47500
+    jmx: 49112
+    sql: 10800
+    http: 8080
+    thin: 10900
+
+persistence:
+  enabled: true
+  size: 8Gi
+  storageClass: "microk8s-hostpath"
+  accessModes:
+    - ReadWriteOnce
+  walVolume:
+    size: 8Gi
+    storageClass: "microk8s-hostpath"
+
+nodeSelector: { }
+tolerations: [ ]
+affinity: { }
+topologySpreadConstraints: [ ]
+
+# App specific
+replicaCount: 1
+
+peerClassLoadingEnabled: false
+
+dataStorage:
+  config: ""
+
+ssl:
+  enabled: false
+  keyStoreFilePath: ""
+  keyStorePassword: ""
+  trustStoreFilePath: ""
+  trustStorePassword: ""
+
+metrics:
+  enabled: false
+
+env:
+  OPTION_LIBS: "ignite-kubernetes,ignite-rest-http,ignite-json,ignite-opencensus"
+  IGNITE_QUIET: "false"
+  IGNITE_WAL_MMAP: "false"
+  IGNITE_WAIT_FOR_BACKUPS_ON_SHUTDOWN: "true"
+  JVM_OPTS: "-Djava.net.preferIPv4Stack=true -Xms1g -Xmx1g -server -XX:MaxMetaspaceSize=256m -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC"
+
+activationJob:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: curlimages/curl
+    tag: 8.17.0
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi

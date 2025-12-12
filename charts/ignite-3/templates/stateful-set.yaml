@@ -1,0 +1,193 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  # The cluster name.
+  name: {{ include "ignite.fullname" . }}-cluster
+  labels:
+    app.kubernetes.io/name: {{ include "ignite.name" . }}
+    helm.sh/chart: {{ include "ignite.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ include "ignite.fullname" . }}-svc-headless
+  {{- if .Values.podManagementPolicy }}
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
+  {{- end }}
+  {{- if .Values.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- end }}
+  {{- if .Values.updateStrategy }}
+  updateStrategy:
+    type: {{ .Values.updateStrategy.type }}
+    {{- if .Values.updateStrategy.rollingUpdate }}
+    rollingUpdate: {{- toYaml .Values.updateStrategy.rollingUpdate | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ignite.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ignite.podLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/config-map.yaml") . | sha256sum }}
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ include "ignite.serviceAccountName" . }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
+      {{- end }}
+      {{- if or .Values.extraInitContainers .Values.jmx.enabled }}
+      initContainers:
+{{- if .Values.extraInitContainers }}
+        {{- toYaml .Values.extraInitContainers | nindent 8 }}
+{{- end }}
+{{- if .Values.jmx.enabled }}
+        - name: jmx-agent-init
+          image: "{{ .Values.jmx.agent.image.registry }}/{{ .Values.jmx.agent.image.repository }}:{{ .Values.jmx.agent.image.tag }}"
+          imagePullPolicy: {{ .Values.jmx.agent.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.jmx.agent.resources | nindent 12 }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              wget -q -O /agent/jmx.jar \
+                https://github.com/prometheus/jmx_exporter/releases/download/1.3.0/jmx_prometheus_javaagent-1.3.0.jar
+          volumeMounts:
+            - name: jmx-agent
+              mountPath: /agent
+{{- end }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- end }}
+      containers:
+        {{- if .Values.extraContainers }}
+        {{- toYaml .Values.extraContainers | nindent 8 }}
+        {{- end }}
+        # Custom pod name.
+        - name: ignite-node
+          # Limits and requests for the Ignite container.
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          env:
+            # Must be specified to ensure that Ignite 3 cluster replicas are visible to each other.
+            - name: IGNITE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            # Ignite 3 working directory.
+            - name: IGNITE_WORK_DIR
+              value: /ignite-3-work
+{{- if .Values.jmx.enabled }}
+            - name: IGNITE3_EXTRA_JVM_ARGS
+              value: "-javaagent:/agent/jmx.jar={{ .Values.jmx.port }}:/opt/jmx/jmx.yaml"
+{{- end }}
+{{- range $name, $value := .Values.env }}
+            - name: "{{ $name }}"
+              value: "{{ $value }}"
+{{- end }}
+{{- if .Values.extraEnvVars }}
+{{- toYaml .Values.extraEnvVars | nindent 12 }}
+{{- end }}
+{{- if or .Values.envFrom .Values.extraEnvVarsCM .Values.extraEnvVarsSecret }}
+          envFrom:
+{{- if .Values.envFrom }}
+            {{- toYaml .Values.envFrom | nindent 12 }}
+{{- end }}
+{{- if .Values.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ .Values.extraEnvVarsCM }}
+{{- end }}
+{{- if .Values.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ .Values.extraEnvVarsSecret }}
+{{- end }}
+{{- end }}
+          # Ignite 3 Docker image and it's version.
+          image: {{ include "ignite.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- toYaml (omit .Values.containerSecurityContext "enabled") | nindent 12 }}
+          {{- end }}
+          ports:
+            - containerPort: 10300
+            - containerPort: 10800
+            - containerPort: 3344
+{{- if .Values.jmx.enabled }}
+            - containerPort: {{ .Values.jmx.port }}
+{{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            # The config will be placed at this path in the container.
+            - mountPath: /opt/ignite/etc/ignite-config.conf
+              name: config-vol
+              subPath: ignite-config.conf
+            - mountPath: /ignite-3-work
+              name: persistence
+{{- if .Values.jmx.enabled }}
+            - name: jmx-agent
+              mountPath: /agent
+            - name: jmx-config
+              mountPath: /opt/jmx/jmx.yaml
+              subPath: jmx.yaml
+{{- end }}
+            {{- if .Values.extraVolumeMounts }}
+              {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: config-vol
+          configMap:
+            name: {{ include "ignite.fullname" . }}-config-map
+{{- if .Values.jmx.enabled }}
+        - name: jmx-agent
+          emptyDir: { }
+        - name: jmx-config
+          configMap:
+            name: {{ include "ignite.fullname" . }}-jmx
+{{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.extraVolumes }}
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: persistence
+      spec:
+        accessModes:
+          {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
