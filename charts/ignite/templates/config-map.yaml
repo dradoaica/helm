@@ -42,7 +42,7 @@ data:
             <!-- Ignite Data Storage Configuration -->
             <property name="dataStorageConfiguration">
                 <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
-{{- if (.Values.persistence.enabled) }}
+{{- if .Values.persistence.enabled }}
                     <!-- Ignite Persistent Storage -->
                     <property name="defaultDataRegionConfiguration">
                         <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
@@ -68,11 +68,11 @@ data:
                     -->
                     <property name="walArchivePath" value="/wal/archive"/>
 {{- end }}
-{{ .Values.dataStorage.config | indent 20 }}
+{{- .Values.dataStorage.config | nindent 20 }}
                 </bean>
             </property>
 
-{{- if (.Values.ssl.enabled) }}
+{{- if .Values.ssl.enabled }}
             <property name="clientConnectorConfiguration">
                 <bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
                     <property name="sslEnabled" value="true"/>
@@ -105,7 +105,7 @@ data:
                 </bean>
             </property>
 
-{{- if (.Values.metrics.enabled) }}
+{{- if .Values.metrics.enabled }}
             <property name="metricsUpdateFrequency" value="5000"/>
 
             <property name="metricExporterSpi">

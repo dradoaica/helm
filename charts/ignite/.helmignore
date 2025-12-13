@@ -14,8 +14,14 @@
 *.swp
 *.bak
 *.tmp
+*.orig
 *~
+# Test and example files (keep these in package)
+# tests/
+# examples/
 # Various IDEs
 .project
 .idea/
 *.tmproj
+.vscode/
+gcp.yaml

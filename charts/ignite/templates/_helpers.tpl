@@ -66,12 +66,37 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+Pod labels
+*/}}
+{{- define "ignite.podLabels" -}}
+{{ include "ignite.selectorLabels" . }}
+{{- if .Values.podLabels }}
+{{ include "common.tplvalues.render" (dict "value" .Values.podLabels "context" $) }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Return the proper image name
 */}}
 {{- define "ignite.image" -}}
 {{- $registryName := .Values.image.registry -}}
 {{- $repositoryName := .Values.image.repository -}}
 {{- $tag := .Values.image.tag | toString -}}
+{{- if .Values.global }}
+    {{- if .Values.global.imageRegistry }}
+     {{- $registryName = .Values.global.imageRegistry -}}
+    {{- end }}
+{{- end }}
+{{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- end -}}
+
+{{/*
+Return the proper activation job image name
+*/}}
+{{- define "ignite.activationJob.image" -}}
+{{- $registryName := .Values.activationJob.image.registry -}}
+{{- $repositoryName := .Values.activationJob.image.repository -}}
+{{- $tag := .Values.activationJob.image.tag | toString -}}
 {{- if .Values.global }}
     {{- if .Values.global.imageRegistry }}
      {{- $registryName = .Values.global.imageRegistry -}}

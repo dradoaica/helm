@@ -90,7 +90,7 @@ readinessProbe:
   successThreshold: 1
 
 startupProbe:
-  enabled: false
+  enabled: true
   httpGet:
     path: /management/v1/node/state
     port: 10300
@@ -109,7 +109,7 @@ service:
 persistence:
   enabled: true
   size: 10Gi
-  storageClass: "microk8s-hostpath"
+  storageClass: ""
   accessModes:
     - ReadWriteOnce
 
@@ -117,6 +117,12 @@ nodeSelector: { }
 tolerations: [ ]
 affinity: { }
 topologySpreadConstraints: [ ]
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+  # Alternatively, use maxUnavailable (mutually exclusive with minAvailable)
+  # maxUnavailable: "50%"
 
 # App specific
 replicaCount: 1

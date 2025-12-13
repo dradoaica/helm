@@ -16,8 +16,8 @@ spec:
       containers:
         - name: cluster-init
           # Specify the Docker image with the Ignite 3 CLI and its version.
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          image: {{ include "ignite.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/sh
           # Command to init the cluster. URL and host must be the name of the service you created before. Port is the management port from values.

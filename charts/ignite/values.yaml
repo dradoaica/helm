@@ -90,7 +90,7 @@ readinessProbe:
   successThreshold: 1
 
 startupProbe:
-  enabled: false
+  enabled: true
   httpGet:
     path: /ignite?cmd=version
     port: 8080
@@ -113,17 +113,23 @@ service:
 persistence:
   enabled: true
   size: 8Gi
-  storageClass: "microk8s-hostpath"
+  storageClass: ""
   accessModes:
     - ReadWriteOnce
   walVolume:
     size: 8Gi
-    storageClass: "microk8s-hostpath"
+    storageClass: ""
 
 nodeSelector: { }
 tolerations: [ ]
 affinity: { }
 topologySpreadConstraints: [ ]
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+  # Alternatively, use maxUnavailable (mutually exclusive with minAvailable)
+  # maxUnavailable: "50%"
 
 # App specific
 replicaCount: 1

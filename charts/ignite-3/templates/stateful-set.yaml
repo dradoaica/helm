@@ -50,7 +50,7 @@ spec:
 {{- end }}
 {{- if .Values.jmx.enabled }}
         - name: jmx-agent-init
-          image: "{{ .Values.jmx.agent.image.registry }}/{{ .Values.jmx.agent.image.repository }}:{{ .Values.jmx.agent.image.tag }}"
+          image: {{ include "ignite.jmxAgent.image" . }}
           imagePullPolicy: {{ .Values.jmx.agent.image.pullPolicy }}
           resources:
             {{- toYaml .Values.jmx.agent.resources | nindent 12 }}
@@ -76,7 +76,7 @@ spec:
         - name: ignite-node
           # Limits and requests for the Ignite container.
           resources:
-{{ toYaml .Values.resources | indent 12 }}
+{{- toYaml .Values.resources | nindent 12 }}
           env:
             # Must be specified to ensure that Ignite 3 cluster replicas are visible to each other.
             - name: IGNITE_NODE_NAME
@@ -187,7 +187,9 @@ spec:
       spec:
         accessModes:
           {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- if .Values.persistence.storageClass }}
         storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
         resources:
           requests:
             storage: {{ .Values.persistence.size }}

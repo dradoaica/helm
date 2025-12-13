@@ -7,5 +7,5 @@ metadata:
     {{- include "ignite.labels" . | nindent 4 }}
 data:
   jmx.yaml: |
-{{ .Values.jmx.config | indent 4 }}
+{{- .Values.jmx.config | nindent 4 }}
 {{- end }}

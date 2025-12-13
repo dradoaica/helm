@@ -15,7 +15,7 @@ spec:
       serviceAccountName: {{ include "ignite.serviceAccountName" . }}
       containers:
         - name: cluster-activate
-          image: "{{ .Values.activationJob.image.registry }}/{{ .Values.activationJob.image.repository }}:{{ .Values.activationJob.image.tag }}"
+          image: {{ include "ignite.activationJob.image" . }}
           imagePullPolicy: {{ .Values.activationJob.image.pullPolicy }}
           command:
             - /bin/sh

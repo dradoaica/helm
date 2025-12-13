@@ -48,11 +48,14 @@ helm install ignite-3 ./charts/ignite-3
 | `resources`                     | Pod requests/limits                                                                                   | `{ "requests": { "cpu": "2", "memory": "4Gi" }, "limits": { "cpu": "2", "memory": "4Gi" } }`         |
 | `livenessProbe`                 | Liveness probe configuration                                                                          | `{ "enabled": true, "httpGet": { "path": "/management/v1/node/state", "port": 10300 }, ... }`        |
 | `readinessProbe`                | Readiness probe configuration                                                                         | `{ "enabled": true, "httpGet": { "path": "/management/v1/node/state", "port": 10300 }, ... }`        |
-| `startupProbe`                  | Startup probe configuration                                                                           | `{ "enabled": false, "httpGet": { "path": "/management/v1/node/state", "port": 10300 }, ... }`       |
+| `startupProbe`                  | Startup probe configuration                                                                           | `{ "enabled": true, "httpGet": { "path": "/management/v1/node/state", "port": 10300 }, ... }`        |
+| `podDisruptionBudget.enabled`   | Enable PodDisruptionBudget for high availability                                                       | `true`                                                                                               |
+| `podDisruptionBudget.minAvailable` | Minimum number of pods that must be available during disruptions (mutually exclusive with maxUnavailable) | `1`                                                                                                  |
+| `podDisruptionBudget.maxUnavailable` | Maximum number of pods that can be unavailable during disruptions (mutually exclusive with minAvailable) | `""`                                                                                                 |
 | `service`                       | Service configuration                                                                                 | `{ "ports": { "management": 10300, "rest": 10800, "cluster": 3344 } }`                               |
 | `persistence.enabled`           | (Boolean) Enable persistent settings for Ignite                                                       | `true`                                                                                               |
 | `persistence.size`              | Persistent volume size for Ignite application                                                         | `10Gi`                                                                                               |
-| `persistence.storageClass`      | Persistent volume storage class                                                                       | `"microk8s-hostpath"`                                                                                |
+| `persistence.storageClass`      | Persistent volume storage class (empty string uses cluster default)                                    | `""`                                                                                                 |
 | `persistence.accessModes`       | Persistent volume access modes                                                                        | `["ReadWriteOnce"]`                                                                                  |
 | `nodeSelector`                  | Node selector for Ignite application                                                                  | `{}`                                                                                                 |
 | `tolerations`                   | Node tolerations for Ignite application                                                               | `[]`                                                                                                 |
@@ -70,12 +73,12 @@ helm install ignite-3 ./charts/ignite-3
 
 ## Persistence
 
-Data persistence can be enabled by specifying appropriate variables. Default persistence configuration is for MicroK8s (
-`microk8s-hostpath`).
+Data persistence can be enabled by specifying appropriate variables. By default, the storage class is empty (`""`), which uses the cluster's default storage class. You can specify a custom storage class if needed.
 
 ```console
 helm install --name my-release \
     --set persistence.enabled=true \
     --set persistence.size=20Gi \
+    --set persistence.storageClass=my-storage-class \
     ./charts/ignite-3
 ```

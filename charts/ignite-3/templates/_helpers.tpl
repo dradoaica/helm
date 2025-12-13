@@ -55,12 +55,37 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+Pod labels
+*/}}
+{{- define "ignite.podLabels" -}}
+{{ include "ignite.selectorLabels" . }}
+{{- if .Values.podLabels }}
+{{ include "common.tplvalues.render" (dict "value" .Values.podLabels "context" $) }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Return the proper image name
 */}}
 {{- define "ignite.image" -}}
 {{- $registryName := .Values.image.registry -}}
 {{- $repositoryName := .Values.image.repository -}}
 {{- $tag := .Values.image.tag | toString -}}
+{{- if .Values.global }}
+    {{- if .Values.global.imageRegistry }}
+     {{- $registryName = .Values.global.imageRegistry -}}
+    {{- end }}
+{{- end }}
+{{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- end -}}
+
+{{/*
+Return the proper JMX agent image name
+*/}}
+{{- define "ignite.jmxAgent.image" -}}
+{{- $registryName := .Values.jmx.agent.image.registry -}}
+{{- $repositoryName := .Values.jmx.agent.image.repository -}}
+{{- $tag := .Values.jmx.agent.image.tag | toString -}}
 {{- if .Values.global }}
     {{- if .Values.global.imageRegistry }}
      {{- $registryName = .Values.global.imageRegistry -}}

@@ -4,9 +4,9 @@ APP VERSION: {{ .Chart.AppVersion }}
 
 ** Please be patient while the chart is being deployed **
 
-{{- if (.Values.persistence.enabled) }}
+{{- if .Values.persistence.enabled }}
 
-{{- if (.Values.activationJob.enabled) }}
+{{- if .Values.activationJob.enabled }}
 If persistence is enabled, the cluster will be activated automatically by a Job.
   You can check the activation status:
   

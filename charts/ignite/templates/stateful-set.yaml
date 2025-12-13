@@ -71,7 +71,7 @@ spec:
           {{- toYaml (omit .Values.containerSecurityContext "enabled") | nindent 12 }}
         {{- end }}
           resources:
-{{ toYaml .Values.resources | indent 12 }}
+{{- toYaml .Values.resources | nindent 12 }}
           env:
 {{- if .Values.env }}
 {{- range $name, $value := .Values.env }}
@@ -85,7 +85,7 @@ spec:
 {{- if or .Values.envFrom .Values.extraEnvVarsCM .Values.extraEnvVarsSecret }}
           envFrom:
 {{- if .Values.envFrom }}
-{{ toYaml .Values.envFrom | indent 12 }}
+{{- toYaml .Values.envFrom | nindent 12 }}
 {{- end }}
 {{- if .Values.extraEnvVarsCM }}
             - configMapRef:
@@ -114,7 +114,7 @@ spec:
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
         {{- end }}
           volumeMounts:
-{{- if (.Values.persistence.enabled) }}
+{{- if .Values.persistence.enabled }}
             - mountPath: "/wal"
               name: ignite-wal
             - mountPath: "/persistence"
@@ -127,28 +127,30 @@ spec:
 {{- end }}
 {{- with .Values.nodeSelector }}
       nodeSelector:
-{{ toYaml . | indent 8 }}
+{{- toYaml . | nindent 8 }}
     {{- end }}
     {{- with .Values.affinity }}
       affinity:
-{{ toYaml . | indent 8 }}
+{{- toYaml . | nindent 8 }}
     {{- end }}
     {{- with .Values.tolerations }}
       tolerations:
-{{ toYaml . | indent 8 }}
+{{- toYaml . | nindent 8 }}
     {{- end }}
     {{- with .Values.topologySpreadConstraints }}
       topologySpreadConstraints:
-{{ toYaml . | indent 8 }}
+{{- toYaml . | nindent 8 }}
     {{- end }}
   volumeClaimTemplates:
-{{- if (.Values.persistence.enabled) }}
+{{- if .Values.persistence.enabled }}
     - metadata:
         name: ignite-persistence
       spec:
         accessModes:
         {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- if .Values.persistence.storageClass }}
         storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
         resources:
           requests:
             storage: {{ .Values.persistence.size }}
@@ -157,7 +159,9 @@ spec:
       spec:
         accessModes:
         {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- if .Values.persistence.walVolume.storageClass }}
         storageClassName: {{ .Values.persistence.walVolume.storageClass }}
+        {{- end }}
         resources:
           requests:
             storage: {{ .Values.persistence.walVolume.size }}

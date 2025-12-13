@@ -52,14 +52,17 @@ helm install --name my-release stable/ignite
 | `resources`                          | Pod request/limits                                                                                             | `{ "requests": { "cpu": "2", "memory": "4Gi" }, "limits": { "cpu": "2", "memory": "4Gi" } }`                                          |
 | `livenessProbe`                      | Liveness probe configuration                                                                                   | `{ "enabled": true, "httpGet": { "path": "/ignite?cmd=version", "port": 8080 }, "initialDelaySeconds": 5, "periodSeconds": 30, ... }` |
 | `readinessProbe`                     | Readiness probe configuration                                                                                  | `{ "enabled": true, "httpGet": { "path": "/ignite?cmd=probe", "port": 8080 }, ... }`                                                  |
-| `startupProbe`                       | Startup probe configuration                                                                                    | `{ "enabled": false, "httpGet": { "path": "/ignite?cmd=version", "port": 8080 }, ... }`                                               |
+| `startupProbe`                       | Startup probe configuration                                                                                    | `{ "enabled": true, "httpGet": { "path": "/ignite?cmd=version", "port": 8080 }, ... }`                                               |
+| `podDisruptionBudget.enabled`        | Enable PodDisruptionBudget for high availability                                                               | `true`                                                                                                                                |
+| `podDisruptionBudget.minAvailable`   | Minimum number of pods that must be available during disruptions (mutually exclusive with maxUnavailable)     | `1`                                                                                                                                   |
+| `podDisruptionBudget.maxUnavailable`| Maximum number of pods that can be unavailable during disruptions (mutually exclusive with minAvailable)      | `""`                                                                                                                                  |
 | `service`                            | Service configuration                                                                                          | `{ "ports": { "jdbc": 11211, "spi": 47100, "discovery": 47500, "jmx": 49112, "sql": 10800, "http": 8080, "thin": 10900 } }`           |
 | `persistence.enabled`                | (Boolean) Enable any persistent settings for ignite - both application and WAL                                 | `true`                                                                                                                                |
 | `persistence.size`                   | Persistent volume size for ignite application                                                                  | `8Gi`                                                                                                                                 |
-| `persistence.storageClass`           | Persistent volume storage class                                                                                | `"microk8s-hostpath"`                                                                                                                 |
+| `persistence.storageClass`           | Persistent volume storage class (empty string uses cluster default)                                            | `""`                                                                                                                                  |
 | `persistence.accessModes`            | Persistent volume access modes                                                                                 | `["ReadWriteOnce"]`                                                                                                                   |
 | `persistence.walVolume.size`         | Persistent volume size for WAL storage                                                                         | `8Gi`                                                                                                                                 |
-| `persistence.walVolume.storageClass` | Persistent volume storage class for WAL                                                                        | `"microk8s-hostpath"`                                                                                                                 |
+| `persistence.walVolume.storageClass` | Persistent volume storage class for WAL (empty string uses cluster default)                                     | `""`                                                                                                                                  |
 | `nodeSelector`                       | Node selector for ignite application                                                                           | `{}`                                                                                                                                  |
 | `tolerations`                        | Node tolerations for ignite application                                                                        | `[]`                                                                                                                                  |
 | `affinity`                           | Node affinity for ignite application                                                                           | `{}`                                                                                                                                  |
@@ -77,12 +80,15 @@ helm install --name my-release stable/ignite
 ## Persistence
 
 Data persistence and WAL persistence can be enabled by specifying appropriate
-variables. Please note that default persistence configuration is for MicroK8s (`microk8s-hostpath`).
+variables. By default, the storage class is empty (`""`), which uses the cluster's default storage class.
+You can specify a custom storage class if needed.
 
 ```console
 helm install --name my-release \
     --set persistence.enabled=true \
     --set persistence.size=100Gi \
+    --set persistence.storageClass=my-storage-class \
     --set persistence.walVolume.size=100Gi \
+    --set persistence.walVolume.storageClass=my-storage-class \
     stable/ignite
 ```

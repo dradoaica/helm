@@ -83,7 +83,7 @@ readinessProbe:
   successThreshold: 1
 
 startupProbe:
-  enabled: false
+  enabled: true
   httpGet:
     path: /health
     port: 8080
@@ -102,6 +102,12 @@ nodeSelector: { }
 tolerations: [ ]
 affinity: { }
 topologySpreadConstraints: [ ]
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+  # Alternatively, use maxUnavailable (mutually exclusive with minAvailable)
+  # maxUnavailable: "50%"
 
 # App specific
 replicaCount: 1
