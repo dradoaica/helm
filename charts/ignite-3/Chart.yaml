@@ -1,0 +1,24 @@
+apiVersion: v2
+appVersion: "3.1.0"
+description: Apache Ignite is an open-source distributed database, caching and processing platform designed to store and compute on large volumes of data across a cluster of nodes.
+name: ignite-3
+type: application
+version: 3.1.0
+keywords:
+  - java
+  - datagrid
+  - caching
+  - jvm
+  - sql
+  - key-value
+  - nosql
+  - distributed
+home: https://ignite.apache.org/docs/ignite3/latest/
+icon: https://ignite.apache.org/img/logo.svg
+sources:
+  - https://github.com/apache/ignite-3
+maintainers:
+  - name: dradoaica
+    email: dradoaica@gmail.com
+    url: https://dradoaica.blogspot.com/
+kubeVersion: ">= 1.26.0"

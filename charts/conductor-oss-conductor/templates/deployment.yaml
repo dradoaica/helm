@@ -1,0 +1,185 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "conductor-oss-conductor.fullname" . }}
+  labels:
+    {{- include "conductor-oss-conductor.labels" . | nindent 4 }}
+  {{- with (include "conductor-oss-conductor.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.updateStrategy.type }}
+  strategy:
+    type: {{ . }}
+  {{- end }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "conductor-oss-conductor.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "conductor-oss-conductor.podLabels" . | nindent 8 }}
+      {{- with (include "conductor-oss-conductor.podAnnotations" .) }}
+      annotations:
+        {{- . | nindent 8 }}
+      {{- end }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ include "conductor-oss-conductor.serviceAccountName" . }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.extraInitContainers }}
+      initContainers:
+        {{- toYaml .Values.extraInitContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        {{- if .Values.extraContainers }}
+        {{- toYaml .Values.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: conductor
+          image: {{ include "conductor-oss-conductor.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- toYaml (omit .Values.containerSecurityContext "enabled") | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "conductor-oss-conductor.fullname" . }}
+                  key: redis-password
+            - name: conductor.cluster.name
+              value: {{ default .Release.Name .Values.cluster.name | quote }}
+            - name: conductor.app.workflowRepairServiceEnabled
+              value: {{ .Values.app.workflowRepairServiceEnabled | quote }}
+            - name: conductor.app.enableRemoveRedisKey
+              value: {{ .Values.app.enableRemoveRedisKey | quote }}
+            {{- if .Values.app.ttlRedisKeyExpire }}
+            - name: conductor.app.ttlRedisKeyExpire
+              value: {{ .Values.app.ttlRedisKeyExpire | quote }}
+            {{- end }}
+            - name: conductor.db.type
+              value: redis_standalone
+            - name: conductor.queue.type
+              value: redis_standalone
+            - name: conductor.redis.hosts
+              value: "{{ .Values.redis.host }}:{{ .Values.redis.port }}"
+            - name: conductor.redis.password
+              value: "$(REDIS_PASSWORD)"
+            - name: conductor.redis-lock.serverAddress
+              value: "redis://:$(REDIS_PASSWORD)@{{ .Values.redis.host }}:{{ .Values.redis.port }}"
+            - name: conductor.redis.taskDefCacheRefreshInterval
+              value: {{ .Values.redis.taskDefCacheRefreshInterval | quote }}
+            - name: conductor.redis.workflowNamespacePrefix
+              value: {{ .Values.redis.workflowNamespacePrefix | quote }}
+            - name: conductor.redis.queueNamespacePrefix
+              value: {{ .Values.redis.queueNamespacePrefix | quote }}
+            - name: conductor.indexing.enabled
+              value: {{ .Values.elasticsearch.enabled | quote }}
+            - name: conductor.elasticsearch.url
+              value: {{ .Values.elasticsearch.url | quote }}
+            - name: conductor.elasticsearch.indexName
+              value: {{ .Values.elasticsearch.indexName | quote }}
+            - name: conductor.elasticsearch.indexPrefix
+              value: {{ .Values.elasticsearch.indexPrefix | quote }}
+            - name: conductor.elasticsearch.indexReplicasCount
+              value: {{ .Values.elasticsearch.indexReplicasCount | quote }}
+            - name: conductor.elasticsearch.version
+              value: {{ .Values.elasticsearch.version | quote }}
+            - name: conductor.elasticsearch.clusterHealthColor
+              value: {{ .Values.elasticsearch.clusterHealthColor | quote }}
+            - name: conductor.elasticsearch.username
+              value: {{ .Values.elasticsearch.username | quote }}
+            - name: conductor.elasticsearch.password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "conductor-oss-conductor.fullname" . }}
+                  key: elasticsearch-password
+            - name: conductor.metrics-prometheus.enabled
+              value: {{ .Values.prometheus.enabled | quote }}
+            - name: management.endpoints.web.exposure.include
+              value: {{ .Values.management.endpointsWebExposureInclude | quote }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.spring.profilesActive | quote }}
+            {{- range $name, $value := .Values.env }}
+            - name: "{{ $name }}"
+              value: "{{ $value }}"
+            {{- end }}
+            {{- with .Values.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if or .Values.extraEnvFrom .Values.extraEnvVarsCM .Values.extraEnvVarsSecret }}
+          envFrom:
+            {{- if .Values.extraEnvFrom }}
+            {{- toYaml .Values.extraEnvFrom | nindent 12 }}
+            {{- end }}
+            {{- if .Values.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ .Values.extraEnvVarsCM }}
+            {{- end }}
+            {{- if .Values.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ .Values.extraEnvVarsSecret }}
+            {{- end }}
+          {{- end }}
+          ports:
+            - name: http-ui
+              containerPort: {{ .Values.container.ports.ui }}
+              protocol: TCP
+            - name: http-api
+              containerPort: {{ .Values.container.ports.http }}
+              protocol: TCP
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.lifecycleHooks }}
+          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.lifecycleHooks "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+      restartPolicy: Always
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
