@@ -1,0 +1,310 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "conductor-oss-conductor.fullname" . }}
+  labels:
+    {{- include "conductor-oss-conductor.labels" . | nindent 4 }}
+  {{- with (include "conductor-oss-conductor.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.updateStrategy.type }}
+  strategy:
+    type: {{ . }}
+  {{- end }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "conductor-oss-conductor.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "conductor-oss-conductor.podLabels" . | nindent 8 }}
+      {{- with (include "conductor-oss-conductor.podAnnotations" .) }}
+      annotations:
+        {{- . | nindent 8 }}
+      {{- end }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ include "conductor-oss-conductor.serviceAccountName" . }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.extraInitContainers }}
+      initContainers:
+        {{- toYaml .Values.extraInitContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        {{- if .Values.extraContainers }}
+        {{- toYaml .Values.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: conductor
+          image: {{ include "conductor-oss-conductor.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext:
+            {{- toYaml (omit .Values.containerSecurityContext "enabled") | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: JVM_OPTS
+              value: >-
+                -server
+                -XX:+AlwaysActAsServerClassMachine
+                -XX:+UseContainerSupport
+                -XX:+AlwaysPreTouch
+                -XX:+UseG1GC
+                -XX:G1HeapRegionSize={{ default 1 .Values.memory.g1HeapRegionSizeMb }}M
+                -XX:MaxGCPauseMillis=200
+                -XX:+ExplicitGCInvokesConcurrent
+                -XX:+UseStringDeduplication
+                -XX:+ParallelRefProcEnabled
+                -XX:-OmitStackTraceInFastThrow
+                -XX:+ExitOnOutOfMemoryError
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/tmp/heapdump.hprof
+                -XX:MaxMetaspaceSize={{ default 256 .Values.memory.maxMetaspaceSizeMb }}M
+                -XX:ReservedCodeCacheSize={{ default 240 .Values.memory.reservedCodeCacheSizeMb }}M
+                -XX:MaxDirectMemorySize={{ default 256 .Values.memory.maxDirectMemorySizeMb }}M
+                -Xms{{ default 2048 .Values.memory.onHeapMb }}M
+                -Xmx{{ default 2048 .Values.memory.onHeapMb }}M
+                {{ .Values.env.EXTRA_JVM_OPTS }}
+            - name: conductor.app.asyncUpdateShortRunningWorkflowDuration
+              value: {{ .Values.app.asyncUpdateShortRunningWorkflowDuration | quote }}
+            - name: conductor.app.enableRemoveRedisKey
+              value: {{ .Values.app.enableRemoveRedisKey | quote }}
+            - name: conductor.app.lockTimeToTry
+              value: {{ .Values.app.lockTimeToTry | quote }}
+            - name: conductor.app.maxTaskInputPayloadSizeThreshold
+              value: {{ .Values.app.maxTaskInputPayloadSizeThreshold | quote }}
+            - name: conductor.app.maxTaskOutputPayloadSizeThreshold
+              value: {{ .Values.app.maxTaskOutputPayloadSizeThreshold | quote }}
+            - name: conductor.app.maxWorkflowInputPayloadSizeThreshold
+              value: {{ .Values.app.maxWorkflowInputPayloadSizeThreshold | quote }}
+            - name: conductor.app.maxWorkflowOutputPayloadSizeThreshold
+              value: {{ .Values.app.maxWorkflowOutputPayloadSizeThreshold | quote }}
+            - name: conductor.app.maxWorkflowVariablesPayloadSizeThreshold
+              value: {{ .Values.app.maxWorkflowVariablesPayloadSizeThreshold | quote }}
+            - name: conductor.app.systemTaskMaxPollCount
+              value: {{ .Values.app.systemTaskMaxPollCount | quote }}
+            - name: conductor.app.systemTaskWorkerThreadCount
+              value: {{ .Values.app.systemTaskWorkerThreadCount | quote }}
+            - name: conductor.app.taskInputPayloadSizeThreshold
+              value: {{ .Values.app.taskInputPayloadSizeThreshold | quote }}
+            - name: conductor.app.taskOutputPayloadSizeThreshold
+              value: {{ .Values.app.taskOutputPayloadSizeThreshold | quote }}
+            {{- if .Values.app.ttlRedisKeyExpire }}
+            - name: conductor.app.ttlRedisKeyExpire
+              value: {{ .Values.app.ttlRedisKeyExpire | quote }}
+            {{- end }}
+            - name: conductor.app.workflowExecutionLockEnabled
+              value: {{ .Values.app.workflowExecutionLockEnabled | quote }}
+            - name: conductor.app.workflowInputPayloadSizeThreshold
+              value: {{ .Values.app.workflowInputPayloadSizeThreshold | quote }}
+            - name: conductor.app.workflowOutputPayloadSizeThreshold
+              value: {{ .Values.app.workflowOutputPayloadSizeThreshold | quote }}
+            - name: conductor.app.workflowRepairServiceEnabled
+              value: {{ .Values.app.workflowRepairServiceEnabled | quote }}
+            - name: conductor.db.type
+              value: {{ .Values.db.type | quote }}
+            - name: conductor.queue.type
+              value: {{ .Values.queue.type | quote }}
+            - name: conductor.workflow-execution-lock.type
+              value: {{ .Values.workflowExecutionLock.type | quote }}
+            - name: conductor.indexing.enabled
+              value: {{ .Values.indexing.enabled | quote }}
+            - name: conductor.indexing.type
+              value: {{ .Values.indexing.type | quote }}
+            {{- if .Values.externalPayloadStorage.type }}
+            - name: conductor.external-payload-storage.type
+              value: {{ .Values.externalPayloadStorage.type | quote }}
+            {{- end }}
+            {{- if or (eq .Values.queue.type "redis_standalone") (eq .Values.workflowExecutionLock.type "redis") }}
+            - name: conductor.redis.hosts
+              value: "{{ .Values.redis.host }}:{{ .Values.redis.port }}"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "conductor-oss-conductor.fullname" . }}
+                  key: redis-password
+            - name: conductor.redis.password
+              value: "$(REDIS_PASSWORD)"
+            - name: conductor.redis-lock.serverAddress
+              value: "redis://:$(REDIS_PASSWORD)@{{ .Values.redis.host }}:{{ .Values.redis.port }}"
+            - name: conductor.redis.ssl
+              value: {{ .Values.redis.ssl | quote }}
+            - name: conductor.redis.taskDefCacheRefreshInterval
+              value: {{ .Values.redis.taskDefCacheRefreshInterval | quote }}
+            - name: conductor.redis.workflowNamespacePrefix
+              value: {{ .Values.redis.workflowNamespacePrefix | quote }}
+            - name: conductor.redis.queueNamespacePrefix
+              value: {{ .Values.redis.queueNamespacePrefix | quote }}
+            - name: management.health.redis.enabled
+              value: {{ .Values.management.healthRedisEnabled | quote }}
+            {{- end }}
+            {{- if eq .Values.db.type "mysql" }}
+            - name: spring.datasource.url
+              value: "jdbc:mysql://{{ .Values.mysql.host }}:{{ .Values.mysql.port }}/{{ .Values.mysql.database }}"
+            - name: spring.datasource.username
+              value: {{ .Values.mysql.username | quote }}
+            - name: spring.datasource.password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "conductor-oss-conductor.fullname" . }}
+                  key: mysql-password
+            {{- end }}
+            {{- if or (eq .Values.db.type "postgres") (eq .Values.externalPayloadStorage.type "postgres") (eq .Values.indexing.type "postgres") }}
+            - name: spring.datasource.url
+              value: "jdbc:postgresql://{{ .Values.postgres.host }}:{{ .Values.postgres.port }}/{{ .Values.postgres.database }}"
+            - name: spring.datasource.username
+              value: {{ .Values.postgres.username | quote }}
+            - name: spring.datasource.password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "conductor-oss-conductor.fullname" . }}
+                  key: postgres-password
+            {{- end }}
+            {{- if eq .Values.indexing.type "elasticsearch" }}
+            - name: conductor.elasticsearch.url
+              value: {{ .Values.elasticsearch.url | quote }}
+            - name: conductor.elasticsearch.username
+              value: {{ .Values.elasticsearch.username | quote }}
+            - name: conductor.elasticsearch.password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "conductor-oss-conductor.fullname" . }}
+                  key: elasticsearch-password
+            - name: conductor.elasticsearch.indexName
+              value: {{ .Values.elasticsearch.indexName | quote }}
+            - name: conductor.elasticsearch.indexPrefix
+              value: {{ .Values.elasticsearch.indexPrefix | quote }}
+            - name: conductor.elasticsearch.indexReplicasCount
+              value: {{ .Values.elasticsearch.indexReplicasCount | quote }}
+            - name: conductor.elasticsearch.version
+              value: {{ .Values.elasticsearch.version | quote }}
+            - name: conductor.elasticsearch.clusterHealthColor
+              value: {{ .Values.elasticsearch.clusterHealthColor | quote }}
+            - name: conductor.elasticsearch.restClientConnectionTimeout
+              value: {{ .Values.elasticsearch.restClientConnectionTimeout | quote }}
+            - name: conductor.elasticsearch.restClientReadTimeout
+              value: {{ .Values.elasticsearch.restClientReadTimeout | quote }}
+            {{- end }}
+            {{- if eq .Values.indexing.type "opensearch" }}
+            - name: conductor.elasticsearch.url
+              value: {{ .Values.opensearch.url | quote }}
+            - name: conductor.elasticsearch.username
+              value: {{ .Values.opensearch.username | quote }}
+            - name: conductor.elasticsearch.password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "conductor-oss-conductor.fullname" . }}
+                  key: opensearch-password
+            - name: conductor.elasticsearch.indexName
+              value: {{ .Values.opensearch.indexName | quote }}
+            - name: conductor.elasticsearch.indexPrefix
+              value: {{ .Values.opensearch.indexPrefix | quote }}
+            - name: conductor.elasticsearch.indexReplicasCount
+              value: {{ .Values.opensearch.indexReplicasCount | quote }}
+            - name: conductor.elasticsearch.version
+              value: {{ .Values.opensearch.version | quote }}
+            - name: conductor.elasticsearch.clusterHealthColor
+              value: {{ .Values.opensearch.clusterHealthColor | quote }}
+            - name: conductor.elasticsearch.restClientConnectionTimeout
+              value: {{ .Values.opensearch.restClientConnectionTimeout | quote }}
+            - name: conductor.elasticsearch.restClientReadTimeout
+              value: {{ .Values.opensearch.restClientReadTimeout | quote }}
+            {{- end }}
+            {{- if eq .Values.indexing.type "postgres" }}
+            - name: conductor.elasticsearch.version
+              value: '0'
+            {{- end }}
+            - name: conductor.metrics-logger.enabled
+              value: {{ .Values.metrics.loggerEnabled | quote }}
+            - name: conductor.metrics-logger.reportPeriodSeconds
+              value: {{ .Values.metrics.loggerReportPeriodSeconds | quote }}
+            - name: conductor.metrics-prometheus.enabled
+              value: {{ .Values.metrics.prometheusEnabled | quote }}
+            - name: management.endpoints.web.exposure.include
+              value: {{ .Values.management.endpointsWebExposureInclude | quote }}
+            - name: loadSample
+              value: 'false'
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.spring.profilesActive | quote }}
+            {{- range $name, $value := .Values.env }}
+            - name: "{{ $name }}"
+              value: "{{ $value }}"
+            {{- end }}
+            {{- with .Values.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if or .Values.extraEnvFrom .Values.extraEnvVarsCM .Values.extraEnvVarsSecret }}
+          envFrom:
+            {{- if .Values.extraEnvFrom }}
+            {{- toYaml .Values.extraEnvFrom | nindent 12 }}
+            {{- end }}
+            {{- if .Values.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ .Values.extraEnvVarsCM }}
+            {{- end }}
+            {{- if .Values.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ .Values.extraEnvVarsSecret }}
+            {{- end }}
+          {{- end }}
+          ports:
+            - name: ui
+              containerPort: {{ .Values.container.ports.ui }}
+              protocol: TCP
+            - name: rest
+              containerPort: {{ .Values.container.ports.rest }}
+              protocol: TCP
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.lifecycleHooks }}
+          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.lifecycleHooks "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+      restartPolicy: Always
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
