@@ -1,0 +1,146 @@
+apiVersion: v1
+entries:
+  aspnetcore-ignite-server:
+  - apiVersion: v2
+    appVersion: 2.17.0
+    created: "2026-01-08T08:53:21.934581858Z"
+    description: Apache Ignite 2 embedded in an ASP.NET Core server with auto-discovery
+      clustering capabilities.
+    digest: e5e1b2c595a0a2cf59a927a0487d295c39633ca6ed9f6e7ca25f6f0eff187119
+    home: https://github.com/dradoaica/AspNetCore.Ignite/
+    icon: https://ignite.apache.org/img/logo.svg
+    keywords:
+    - ignite
+    - csharp
+    - dotnet
+    - aspnetcore
+    - datagrid
+    - caching
+    - distributed
+    - key-value
+    - nosql
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - email: dradoaica@gmail.com
+      name: dradoaica
+      url: https://dradoaica.blogspot.com/
+    name: aspnetcore-ignite-server
+    sources:
+    - https://github.com/dradoaica/AspNetCore.Ignite/
+    type: application
+    urls:
+    - https://github.com/dradoaica/helm-charts/releases/download/aspnetcore-ignite-server-2.17.0/aspnetcore-ignite-server-2.17.0.tgz
+    version: 2.17.0
+  clamav-openshift:
+  - apiVersion: v2
+    appVersion: 1.5.1
+    created: "2026-01-08T08:53:22.11186642Z"
+    description: ClamAV is an open-source antivirus engine for detecting trojans,
+      viruses, malware & other malicious threats. This chart deploys ClamAV as a StatefulSet
+      with persistence support.
+    digest: bd3a060324bd1a5e04e1e74d3f2777ec55fcfc41fad0d570739d7bfbb8699c58
+    home: https://github.com/dradoaica/clamav-docker-openshift/
+    icon: https://www.clamav.net/assets/clamav-trademark.png
+    keywords:
+    - clamav
+    - antivirus
+    - malware
+    - security
+    - scanning
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - email: dradoaica@gmail.com
+      name: dradoaica
+      url: https://dradoaica.blogspot.com/
+    name: clamav-openshift
+    sources:
+    - https://github.com/dradoaica/clamav-docker-openshift/
+    type: application
+    urls:
+    - https://github.com/dradoaica/helm-charts/releases/download/clamav-openshift-1.5.1/clamav-openshift-1.5.1.tgz
+    version: 1.5.1
+  conductor-oss-conductor:
+  - apiVersion: v2
+    appVersion: 3.15.0
+    created: "2026-01-08T08:53:22.270052104Z"
+    description: Conductor OSS Conductor is a platform originally created at Netflix
+      to orchestrate workflows that span across microservices. This chart deploys
+      Conductor OSS Conductor as a Deployment.
+    digest: d64ce0fdab61d1bf7a11b2f5dcae0302aeb21054855ece353e803c983643b0ce
+    home: https://docs.conductor-oss.org/
+    icon: https://docs.conductor-oss.org/home/icons/conductor.svg
+    keywords:
+    - conductor
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - email: dradoaica@gmail.com
+      name: dradoaica
+      url: https://dradoaica.blogspot.com/
+    name: conductor-oss-conductor
+    sources:
+    - https://github.com/conductor-oss/conductor
+    type: application
+    urls:
+    - https://github.com/dradoaica/helm-charts/releases/download/conductor-oss-conductor-3.15.0/conductor-oss-conductor-3.15.0.tgz
+    version: 3.15.0
+  ignite:
+  - apiVersion: v2
+    appVersion: 2.17.0
+    created: "2026-01-08T08:53:22.40545262Z"
+    description: Apache Ignite is a distributed database for high-performance computing
+      with in-memory speed.
+    digest: 77fba3ea2ad73a16448660030191c839dd6b313644e8f04345571a56837c3a08
+    home: https://ignite.apache.org/docs/ignite2/latest/
+    icon: https://ignite.apache.org/img/logo.svg
+    keywords:
+    - java
+    - datagrid
+    - caching
+    - jvm
+    - sql
+    - key-value
+    - nosql
+    - distributed
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - email: dradoaica@gmail.com
+      name: dradoaica
+      url: https://dradoaica.blogspot.com/
+    name: ignite
+    sources:
+    - https://github.com/apache/ignite
+    type: application
+    urls:
+    - https://github.com/dradoaica/helm-charts/releases/download/ignite-2.17.0/ignite-2.17.0.tgz
+    version: 2.17.0
+  ignite-3:
+  - apiVersion: v2
+    appVersion: 3.1.0
+    created: "2026-01-08T08:53:22.566075288Z"
+    description: Apache Ignite is a distributed database for high-performance computing
+      with in-memory speed.
+    digest: 9de15219acdd88461726f66df2349faa2ae3132e073f4627d6929cfa8080df18
+    home: https://ignite.apache.org/docs/ignite3/latest/
+    icon: https://ignite.apache.org/img/logo.svg
+    keywords:
+    - java
+    - datagrid
+    - caching
+    - jvm
+    - sql
+    - key-value
+    - nosql
+    - distributed
+    kubeVersion: '>= 1.26.0'
+    maintainers:
+    - email: dradoaica@gmail.com
+      name: dradoaica
+      url: https://dradoaica.blogspot.com/
+    name: ignite-3
+    sources:
+    - https://github.com/apache/ignite-3
+    type: application
+    urls:
+    - https://github.com/dradoaica/helm-charts/releases/download/ignite-3-3.1.0/ignite-3-3.1.0.tgz
+    version: 3.1.0
+generated: "2026-01-08T08:53:22.566081389Z"
