@@ -88,7 +88,7 @@ Return the proper image name
 {{- define "aspnetcore-ignite-server.image" -}}
 {{- $registryName := .Values.image.registry -}}
 {{- $repositoryName := .Values.image.repository -}}
-{{- $tag := .Values.image.tag | toString -}}
+{{- $tag := .Values.image.tag | default .Chart.AppVersion | toString -}}
     {{- if .Values.global }}
         {{- if .Values.global.imageRegistry }}
             {{- $registryName = .Values.global.imageRegistry -}}

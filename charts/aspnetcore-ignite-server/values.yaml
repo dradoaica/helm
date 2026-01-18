@@ -42,7 +42,7 @@ image:
   # -- Main container image repository
   repository: dradoaica/aspnetcore.ignite-server
   # -- Main container image tag
-  tag: 2.17.0
+  tag: ""
   # -- Main container image pull policy
   pullPolicy: IfNotPresent
 
@@ -224,7 +224,15 @@ networkPolicy:
   # -- NetworkPolicy ingress rules
   ingress: [ ]
   # -- NetworkPolicy egress rules
-  egress: [ ]
+  egress:
+    # Allow DNS resolution
+    - to:
+        - ipBlock: { cidr: 0.0.0.0/0 }
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
 
 podDisruptionBudget:
   # -- Create a PodDisruptionBudget for high availability

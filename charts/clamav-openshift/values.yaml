@@ -42,7 +42,7 @@ image:
   # -- Main container image repository
   repository: dradoaica/clamav-openshift
   # -- Main container image tag
-  tag: "1.5.1"
+  tag: ""
   # -- Main container image pull policy
   pullPolicy: IfNotPresent
 
@@ -205,7 +205,23 @@ networkPolicy:
   # -- NetworkPolicy ingress rules
   ingress: [ ]
   # -- NetworkPolicy egress rules
-  egress: [ ]
+  egress:
+    # Allow DNS resolution
+    - to:
+        - ipBlock: { cidr: 0.0.0.0/0 }
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Allow HTTP/HTTPS for database updates
+    - to:
+        - ipBlock: { cidr: 0.0.0.0/0 }
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 443
+          protocol: TCP
 
 podDisruptionBudget:
   # -- Create a PodDisruptionBudget for high availability

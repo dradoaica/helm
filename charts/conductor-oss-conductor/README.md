@@ -1,6 +1,6 @@
 # conductor-oss-conductor
 
-![Version: 3.15.0](https://img.shields.io/badge/Version-3.15.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.15.0](https://img.shields.io/badge/AppVersion-3.15.0-informational?style=flat-square)
+![Version: 3.15.1](https://img.shields.io/badge/Version-3.15.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.15.0](https://img.shields.io/badge/AppVersion-3.15.0-informational?style=flat-square)
 
 Conductor OSS Conductor is a platform originally created at Netflix to orchestrate workflows that span across microservices. This chart deploys Conductor OSS Conductor as a Deployment.
 
@@ -53,7 +53,7 @@ Kubernetes: `>= 1.26.0`
 | image.pullPolicy | string | `"IfNotPresent"` | Main container image pull policy |
 | image.registry | string | `"docker.io"` | Main container image registry |
 | image.repository | string | `"conductoross/conductor-standalone"` | Main container image repository |
-| image.tag | string | `"3.15.0"` | Main container image tag |
+| image.tag | string | `""` | Main container image tag |
 | indexing | object | `{"enabled":true,"type":"elasticsearch"}` | Indexing configuration. Allowed values: elasticsearch, opensearch, postgres, standalone |
 | ingress.annotations | object | `{}` | Additional annotations for the Ingress |
 | ingress.className | string | `""` | IngressClass that will be used to implement the Ingress |
@@ -75,7 +75,7 @@ Kubernetes: `>= 1.26.0`
 | mysql | object | `{"database":"","host":"","password":"","port":3306,"username":""}` | MySQL configuration |
 | nameOverride | string | `""` | String to partially override the fullname template with a string (will prepend the release name) |
 | networkPolicy.create | bool | `false` | Create a NetworkPolicy |
-| networkPolicy.egress | list | `[]` | NetworkPolicy egress rules |
+| networkPolicy.egress | list | `[{"ports":[{"port":53,"protocol":"UDP"},{"port":53,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}]` | NetworkPolicy egress rules |
 | networkPolicy.ingress | list | `[]` | NetworkPolicy ingress rules |
 | networkPolicy.name | string | `""` | Name for the NetworkPolicy (defaults to fullname when empty) |
 | nodeSelector | object | `{}` | Node selector |
