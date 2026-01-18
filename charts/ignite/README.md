@@ -1,6 +1,6 @@
 # ignite
 
-![Version: 2.17.1](https://img.shields.io/badge/Version-2.17.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.17.0](https://img.shields.io/badge/AppVersion-2.17.0-informational?style=flat-square)
+![Version: 2.17.2](https://img.shields.io/badge/Version-2.17.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.17.0](https://img.shields.io/badge/AppVersion-2.17.0-informational?style=flat-square)
 
 Apache Ignite is a distributed database for high-performance computing with in-memory speed.
 
@@ -30,18 +30,19 @@ Kubernetes: `>= 1.26.0`
 | affinity | object | `{}` | Node affinity |
 | annotations | object | `{}` | Annotations to add to all resources |
 | authentication.enabled | bool | `true` | Enable authentication |
-| authentication.igniteUserPassword | string | `""` | New password for the ignite user (defaults to ignite when empty) |
+| authentication.igniteUserPassword | string | `""` | Password for the ignite user (defaults to ignite when empty) |
 | autoscaling.create | bool | `false` | Create a HorizontalPodAutoscaler |
 | autoscaling.maxReplicas | int | `10` | Maximum number of replicas |
 | autoscaling.minReplicas | int | `1` | Minimum number of replicas |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage |
 | autoscaling.targetMemoryUtilizationPercentage | int | `80` | Target memory utilization percentage |
-| cacheConfiguration | string | `""` | Configuration for caches |
+| cacheConfiguration | string | `""` | Cache configuration |
 | collisionSpi | string | `""` | Collision SPI |
 | communicationSpi | string | `"<bean class=\"org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi\">\n    <property name=\"messageQueueLimit\" value=\"2048\"/>\n    <property name=\"slowClientQueueLimit\" value=\"2048\"/>\n    <property name=\"socketWriteTimeout\" value=\"5000\"/>\n    <property name=\"connectTimeout\" value=\"10000\"/>\n</bean>"` | Communication SPI |
 | container.ports | object | `{"jdbc":11211,"jmx":49112,"rest":8080,"spiCommunication":47100,"spiDiscovery":47500,"sql":10800,"thinClients":10900}` | Container ports used by the Pod spec and as Service targetPort values |
 | containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"enabled":true,"privileged":false,"readOnlyRootFilesystem":false,"runAsGroup":1001,"runAsNonRoot":true,"runAsUser":1001,"seccompProfile":{"type":"RuntimeDefault"}}` | Container security context configuration |
 | containerSecurityContext.enabled | bool | `true` | Enable container security context |
+| dataStorage | object | `{"extraConfiguration":"","pageEvictionMode":""}` | Data storage configuration |
 | dataStorage.extraConfiguration | string | `""` | Extra configuration for org.apache.ignite.configuration.DataStorageConfiguration bean |
 | dataStorage.pageEvictionMode | string | `""` | Off-heap eviction policy for in-memory mode (e.g., RANDOM_LRU) |
 | deploymentSpi | string | `""` | Deployment SPI |

@@ -274,15 +274,15 @@ memory:
   # -- JVM DirectMemory max size in MB (offHeapMb + checkpointing buffer size)
   maxDirectMemorySizeMb: 2560
 
-dataStorage:
-  # -- Storage engine to use (aipersist for persistence mode, aimem for in-memory mode)
-  engine: aipersist
-
 authentication:
   # -- Enable authentication
   enabled: true
   # -- Password for the ignite user (defaults to ignite when empty)
   igniteUserPassword: ""
+
+dataStorage:
+  # -- Storage engine to use (aipersist for persistence mode, aimem for in-memory mode)
+  engine: aipersist
 
 ssl:
   clientConnector:

@@ -304,7 +304,7 @@ extraBeans: |-
 authentication:
   # -- Enable authentication
   enabled: true
-  # -- New password for the ignite user (defaults to ignite when empty)
+  # -- Password for the ignite user (defaults to ignite when empty)
   igniteUserPassword: ""
 
 # -- Enable the Ignite's [Zero Deployment](https://ignite.apache.org/docs/ignite2/latest/code-deployment/peer-class-loading.html#enabling-peer-class-loading)
@@ -337,9 +337,10 @@ threadPools:
 # -- User attributes
 userAttributes: |-
 
-# -- Configuration for caches
+# -- Cache configuration
 cacheConfiguration: |-
 
+# -- Data storage configuration
 dataStorage:
   # -- Off-heap eviction policy for in-memory mode (e.g., RANDOM_LRU)
   pageEvictionMode: ""

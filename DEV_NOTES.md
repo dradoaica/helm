@@ -75,7 +75,7 @@ multipass exec microk8s-vm -- mkdir charts
 
 multipass transfer charts\aspnetcore-ignite-server microk8s-vm:charts/aspnetcore-ignite-server -r
 microk8s helm install aspnetcore-ignite-server ./charts/aspnetcore-ignite-server -n ra2
-microk8s kubectl port-forward -n ra2 service/aspnetcore-ignite-server 8080:8080
+microk8s kubectl port-forward -n ra2 service/aspnetcore-ignite-server 10800:10800 8080:8080
 microk8s helm uninstall aspnetcore-ignite-server -n ra2
 multipass exec microk8s-vm -- rm -rf charts/aspnetcore-ignite-server
 
