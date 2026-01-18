@@ -38,11 +38,34 @@ data:
             http://www.springframework.org/schema/util
             http://www.springframework.org/schema/util/spring-util.xsd">
 
+        {{- if .Values.extraBeans }}
+        {{ .Values.extraBeans | nindent 8 }}
+        {{- end }}
+
         <bean class="org.apache.ignite.configuration.IgniteConfiguration" id="ignite.cfg">
+            <property name="authenticationEnabled" value="{{ .Values.authentication.enabled }}"/>
             <property name="peerClassLoadingEnabled" value="{{ .Values.peerClassLoadingEnabled }}"/>
-            <property name="failureDetectionTimeout" value="30000"/>
-            <property name="clientFailureDetectionTimeout" value="60000"/>
-            <property name="networkTimeout" value="10000"/>
+            <property name="failureDetectionTimeout" value="{{ .Values.timeouts.failureDetectionTimeout }}"/>
+            <property name="clientFailureDetectionTimeout" value="{{ .Values.timeouts.clientFailureDetectionTimeout }}"/>
+            <property name="networkTimeout" value="{{ .Values.timeouts.networkTimeout }}"/>
+            {{- if .Values.threadPools.publicThreadPoolSize }}
+            <property name="publicThreadPoolSize" value="{{ .Values.threadPools.publicThreadPoolSize }}"/>
+            {{- end }}
+            {{- if .Values.threadPools.systemThreadPoolSize }}
+            <property name="systemThreadPoolSize" value="{{ .Values.threadPools.systemThreadPoolSize }}"/>
+            {{- end }}
+            {{- if .Values.threadPools.queryThreadPoolSize }}
+            <property name="queryThreadPoolSize" value="{{ .Values.threadPools.queryThreadPoolSize }}"/>
+            {{- end }}
+            {{- if .Values.threadPools.serviceThreadPoolSize }}
+            <property name="serviceThreadPoolSize" value="{{ .Values.threadPools.serviceThreadPoolSize }}"/>
+            {{- end }}
+            {{- if .Values.threadPools.stripedPoolSize }}
+            <property name="stripedPoolSize" value="{{ .Values.threadPools.stripedPoolSize }}"/>
+            {{- end }}
+            {{- if .Values.threadPools.dataStreamerThreadPoolSize }}
+            <property name="dataStreamerThreadPoolSize" value="{{ .Values.threadPools.dataStreamerThreadPoolSize }}"/>
+            {{- end }}
             <property name="segmentationPolicy" value="RESTART_JVM" />
             <property name="segmentationResolveAttempts" value="5" />
             <property name="shutdownPolicy" value="GRACEFUL"/>
@@ -50,15 +73,6 @@ data:
             <property name="gridLogger">
                 <bean class="org.apache.ignite.logger.log4j2.Log4J2Logger">
                     <constructor-arg type="java.lang.String" value="/opt/ignite/apache-ignite/config/log4j2-config.xml"/>
-                </bean>
-            </property>
-
-            <property name="communicationSpi">
-                <bean class="org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi">
-                    <property name="messageQueueLimit" value="2048"/>
-                    <property name="slowClientQueueLimit" value="2048"/>
-                    <property name="socketWriteTimeout" value="5000"/>
-                    <property name="connectTimeout" value="10000"/>
                 </bean>
             </property>
 
@@ -74,6 +88,18 @@ data:
                     <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_REBALANCE_PART_DATA_LOST"/>
                 </list>
             </property>
+
+            {{- if .Values.userAttributes }}
+            <property name="userAttributes">
+                {{- .Values.userAttributes | nindent 16 }}
+            </property>
+            {{- end }}
+
+            {{- if .Values.cacheConfiguration }}
+            <property name="cacheConfiguration">
+                {{- .Values.cacheConfiguration | nindent 16 }}
+            </property>
+            {{- end }}
 
             <!-- Ignite Data Storage Configuration -->
             <property name="dataStorageConfiguration">
@@ -120,7 +146,29 @@ data:
                 </bean>
             </property>
 
-            <property name="authenticationEnabled" value="{{ .Values.authentication.enabled }}"/>
+            {{- if .Values.executorConfiguration }}
+            <property name="executorConfiguration">
+                {{- .Values.executorConfiguration | nindent 16 }}
+            </property>
+            {{- end }}
+
+            {{- if .Values.serviceConfiguration }}
+            <property name="serviceConfiguration">
+                {{- .Values.serviceConfiguration | nindent 16 }}
+            </property>
+            {{- end }}
+
+            {{- if .Values.sqlConfiguration }}
+            <property name="sqlConfiguration">
+                {{- .Values.sqlConfiguration | nindent 16 }}
+            </property>
+            {{- end }}
+
+            {{- if .Values.transactionConfiguration }}
+            <property name="transactionConfiguration">
+                {{- .Values.transactionConfiguration | nindent 16 }}
+            </property>
+            {{- end }}
 
             {{- if .Values.ssl.enabled }}
             <!-- SSL/TLS for Nodes -->
@@ -149,6 +197,24 @@ data:
             </property>
             {{- end }}
 
+            {{- if .Values.collisionSpi }}
+            <property name="collisionSpi">
+                {{- .Values.collisionSpi | nindent 16 }}
+            </property>
+            {{- end }}
+
+            {{- if .Values.communicationSpi }}
+            <property name="communicationSpi">
+                {{ .Values.communicationSpi | nindent 16 }}
+            </property>
+            {{- end }}
+
+            {{- if .Values.deploymentSpi }}
+            <property name="deploymentSpi">
+                {{- .Values.deploymentSpi | nindent 16 }}
+            </property>
+            {{- end }}
+
             <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
             <property name="discoverySpi">
                 <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
@@ -164,6 +230,18 @@ data:
                 </bean>
             </property>
 
+            {{- if .Values.failoverSpi }}
+            <property name="failoverSpi">
+                {{- .Values.failoverSpi | nindent 16 }}
+            </property>
+            {{- end }}
+
+            {{- if .Values.loadBalancingSpi }}
+            <property name="loadBalancingSpi">
+                {{- .Values.loadBalancingSpi | nindent 16 }}
+            </property>
+            {{- end }}
+
             {{- if .Values.metrics.enabled }}
             <property name="metricsUpdateFrequency" value="5000"/>
 
@@ -173,6 +251,12 @@ data:
                         <property name="period" value="10000" />
                     </bean>
                 </list>
+            </property>
+            {{- end }}
+
+            {{- if .Values.tracing.enabled }}
+            <property name="tracingSpi">
+                <bean class="org.apache.ignite.spi.tracing.opencensus.OpenCensusTracingSpi"/>
             </property>
             {{- end }}
         </bean>

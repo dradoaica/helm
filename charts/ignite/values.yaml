@@ -284,9 +284,6 @@ ingress:
 # -- Number of pods
 replicaCount: 1
 
-# -- Enable the Ignite's [Zero Deployment](https://ignite.apache.org/docs/ignite2/latest/code-deployment/peer-class-loading.html#enabling-peer-class-loading)
-peerClassLoadingEnabled: false
-
 memory:
   # -- On-heap memory limit in MB. If set, -Xms and -Xmx will be value. If not set, defaults to 1024
   onHeapMb: ""
@@ -301,17 +298,65 @@ memory:
   # -- JVM DirectMemory max size in MB (offHeapMb + checkpointing buffer size + other system regions total size)
   maxDirectMemorySizeMb: 2960
 
-dataStorage:
-  # -- Off-heap eviction policy for in-memory mode (e.g., RANDOM_LRU)
-  pageEvictionMode: ""
-  # -- Extra configuration for org.apache.ignite.configuration.DataStorageConfiguration bean
-  extraConfiguration: |-
+# -- Extra beans (e.g. com.mysql.cj.jdbc.MysqlDataSource)
+extraBeans: |-
 
 authentication:
   # -- Enable authentication
   enabled: true
   # -- New password for the ignite user (defaults to ignite when empty)
   igniteUserPassword: ""
+
+# -- Enable the Ignite's [Zero Deployment](https://ignite.apache.org/docs/ignite2/latest/code-deployment/peer-class-loading.html#enabling-peer-class-loading)
+peerClassLoadingEnabled: false
+
+# -- Timeouts
+timeouts:
+  # -- Failure detection timeout in milliseconds
+  failureDetectionTimeout: 30000
+  # -- Client failure detection timeout in milliseconds
+  clientFailureDetectionTimeout: 60000
+  # -- Network timeout in milliseconds
+  networkTimeout: 10000
+
+# -- Thread pools
+threadPools:
+  # -- Public thread pool size
+  publicThreadPoolSize: ""
+  # -- System thread pool size
+  systemThreadPoolSize: ""
+  # -- Query thread pool size
+  queryThreadPoolSize: ""
+  # -- Service thread pool size
+  serviceThreadPoolSize: ""
+  # -- Striped thread pool size
+  stripedPoolSize: ""
+  # -- Data streamer thread pool size
+  dataStreamerThreadPoolSize: ""
+
+# -- User attributes
+userAttributes: |-
+
+# -- Configuration for caches
+cacheConfiguration: |-
+
+dataStorage:
+  # -- Off-heap eviction policy for in-memory mode (e.g., RANDOM_LRU)
+  pageEvictionMode: ""
+  # -- Extra configuration for org.apache.ignite.configuration.DataStorageConfiguration bean
+  extraConfiguration: |-
+
+# -- Executor configuration
+executorConfiguration: |-
+
+# -- Service configuration
+serviceConfiguration: |-
+
+# -- SQL configuration
+sqlConfiguration: |-
+
+# -- Transaction configuration
+transactionConfiguration: |-
 
 ssl:
   # -- Enable SSL
@@ -338,8 +383,33 @@ ssl:
     # -- Client authentication for the client connector
     clientAuth: false
 
+# -- Collision SPI
+collisionSpi: |-
+
+# -- Communication SPI
+communicationSpi: |-
+  <bean class="org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi">
+      <property name="messageQueueLimit" value="2048"/>
+      <property name="slowClientQueueLimit" value="2048"/>
+      <property name="socketWriteTimeout" value="5000"/>
+      <property name="connectTimeout" value="10000"/>
+  </bean>
+
+# -- Deployment SPI
+deploymentSpi: |-
+
+# -- Failover SPI
+failoverSpi: |-
+
+# -- Load balancing SPI
+loadBalancingSpi: |-
+
 metrics:
   # -- Enable metrics
+  enabled: false
+
+tracing:
+  # -- Enable tracing
   enabled: false
 
 # -- Environment variables
