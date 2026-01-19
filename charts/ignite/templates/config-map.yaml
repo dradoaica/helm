@@ -101,6 +101,21 @@ data:
             </property>
             {{- end }}
 
+            <property name="clientConnectorConfiguration">
+                <bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
+                    {{- if .Values.ssl.enabled }}
+                    <!--
+                        SSL/TLS for Thin Clients and JDBC/ODBC.
+                        Re-use the SSLContextFactory configured for nodes.
+                    -->
+                    <property name="sslEnabled" value="{{ .Values.ssl.clientConnector.enabled }}"/>
+                    <property name="sslClientAuth" value="{{ .Values.ssl.clientConnector.clientAuth }}"/>
+                    {{- end }}
+
+                    {{- .Values.clientConnector.extraConfiguration | nindent 20 }}
+                </bean>
+            </property>
+
             <!-- Ignite Data Storage Configuration -->
             <property name="dataStorageConfiguration">
                 <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
@@ -182,17 +197,6 @@ data:
                     <property name="trustStorePassword" value="${IGNITE_SSL_TS_PASS}"/>
                     <property name="trustStoreType" value="{{ .Values.ssl.trustStoreType }}"/>
                     <property name="protocol" value="{{ .Values.ssl.protocol }}"/>
-                </bean>
-            </property>
-
-            <!--
-                SSL/TLS for Thin Clients and JDBC/ODBC.
-                Re-use the SSLContextFactory configured for nodes.
-            -->
-            <property name="clientConnectorConfiguration">
-                <bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
-                    <property name="sslEnabled" value="{{ .Values.ssl.clientConnector.enabled }}"/>
-                    <property name="sslClientAuth" value="{{ .Values.ssl.clientConnector.clientAuth }}"/>
                 </bean>
             </property>
             {{- end }}

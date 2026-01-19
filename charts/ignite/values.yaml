@@ -306,7 +306,7 @@ memory:
   # -- JVM DirectMemory max size in MB (offHeapMb + checkpointing buffer size + other system regions total size)
   maxDirectMemorySizeMb: 2960
 
-# -- Extra beans (e.g. com.mysql.cj.jdbc.MysqlDataSource)
+# -- Extra beans (e.g., com.mysql.cj.jdbc.MysqlDataSource)
 extraBeans: |-
 
 authentication:
@@ -348,6 +348,11 @@ userAttributes: |-
 # -- Cache configuration
 cacheConfiguration: |-
 
+# -- Client connector configuration
+clientConnector:
+  # -- Extra configuration for org.apache.ignite.configuration.ClientConnectorConfiguration bean
+  extraConfiguration: |-
+
 # -- Data storage configuration
 dataStorage:
   # -- Off-heap eviction policy for in-memory mode (e.g., RANDOM_LRU)
@@ -367,6 +372,7 @@ sqlConfiguration: |-
 # -- Transaction configuration
 transactionConfiguration: |-
 
+# -- SSL configuration
 ssl:
   # -- Enable SSL
   enabled: false
@@ -386,6 +392,7 @@ ssl:
   trustStoreType: JKS
   # -- Protocol
   protocol: TLSv1.2
+  # -- SSL client connector configuration
   clientConnector:
     # -- Enable SSL for the client connector
     enabled: false
